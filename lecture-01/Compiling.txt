@@ -1,0 +1,24 @@
+Compiling the HelloWorld.cpp source file to produce an executable is done as following:
+
+1) Compile the source code. From the terminal, invoke the compiler:
+
+g++ HelloWorld.cpp -o HelloWorld
+
+- g++ is the C++ compiler driver for the GNU C++ Compiler, basically it's the same as invoking gcc (which is the driver for the GNU C Compiler) but automatically tells the compiler we have a C++ source file and that it should be treated like one, e.g. automatically linking with libstdc++.so which is the shared library for the C++ Standard Library. The C++ Standard Library is used in C++ for anything that is not part of the core language (like doing input output operations, for example).
+
+If we wanted to invoke gcc instead (the driver for GNU C Compiler), it would work too because the compiler would figure out from the extension of the filename (.cpp instead of .c) that it should compile a C++ source file. Instead we need to tell it manually to link with libstdc++, like this:
+
+gcc HelloWorld.cpp -o HelloWorld -lstdc++
+
+If instead we would rename our HelloWorld.cpp to HelloWorld.c and try to compile it with gcc, that would result in some compilation errors because we're now invoking the GNU C Compiler driver with a C filename extension, therefore tricking the compiler into actually taking our word for granted, e.g. that it's dealing with a C source file.
+
+- the first argument to g++/gcc is the source file name
+
+- then we use "-o" option for telling it how to name the executable file that it produces
+
+
+2) The result of the compilation is an executable file, we can now execute it from the terminal:
+
+./HelloWorld
+
+

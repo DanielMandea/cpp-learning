@@ -1,0 +1,10 @@
+For the cpp-learning program, we shall make use of the following:
+
+
+1. macOS or another Unix-based operating system (Linux, FreeBSD, etc)
+
+2. Sublime Text Editor (or any text editor, or an IDE, but an IDE is kinda overkill)
+
+3. git
+
+4. gcc (or clang if on macOS; clang is automatically invoked by the "gcc" command)
