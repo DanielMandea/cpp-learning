@@ -1,0 +1,10 @@
+Instructions for compiling
+
+
+Because we now have multiple files in our "project", we may no longer say just g++ Main.cpp -o main, because that would compile only our Main.cpp file, but what about Rectangle.cpp? 
+
+Remember, only cpp files are COMPILED. Hxx files are just included in other cpp files.
+
+So we now have to tell the compiler about all our source files: g++ Rectangle.cpp Main.cpp -o main -std=c++17
+
+That last bit (-std=c++17) is to tell the compiler we want to be using the C++17 standard of the language. c++11, c++14 and c++2a (2a from 20) should be viable too. By default, it's c++98, you can try it to see how it will complain about things like mWidth{} being syntax errors.
