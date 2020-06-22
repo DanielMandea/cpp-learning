@@ -1,0 +1,64 @@
+Toolproject goals:
+
+1. multithreading
+
+2. command line arguments
+
+3. cpprestsdk
+
+4. client-server
+
+5. CRUD via REST
+
+Create      POST
+Read        GET
+Update      PUT/POST
+Delete      DELETE
+
+
+
+
+
+
+server                       client
+
+1 main thread                1 main thread
+X worker threads             Y client threads
+
+
+
+
+
+
+
+
+./toolproject clients 10 objects 3 
+
+
+Name: name
+E-mail address: email
+
+
+1. Create
+2. Read
+3. Update
+4. Delete
+5. ListAll
+
+
+1
+
+
+name, email
+
+id
+
+
+
+-----------------------
+
+For CRUD storage, we will be using either local filesystem (writing in a file) or directly storing in memory (no persistent storage).
+
+I want the software design to be flexible enough to allow me to change from --- memory/local filesystem/fully grown RDBMS --- easily.
+
+
