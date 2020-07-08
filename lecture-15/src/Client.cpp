@@ -45,8 +45,6 @@ namespace
 	}
 }
 
-
-
 Client::Client()
 : mActions{}
 {
@@ -62,43 +60,45 @@ void Client::addAction(std::unique_ptr<ClientAction> clientAction)
 
 void Client::executeActions()
 {
-	while (!mActions.empty())
+	std::thread actionsThread{[this]()
 	{
-		const auto& action = mActions.front();
+		while (!mActions.empty())
+		{
+			const auto& action = mActions.front();
 
-		doAction(*action);
+			doAction(*action);
 
-		mActions.pop();
-	}
+			mActions.pop();
+		}
+	}};
+
+	actionsThread.detach();
 }
 
 void Client::doAction(const ClientAction& action) const
 {
-	std::thread doActionThread{[&action]()
+	auto [method, uri] = getEndpointByOperation(action.getOperation());
+
+	web::http::uri_builder builder{uri};
+	builder.append_query("user", action.getUserName());
+
+	if (ClientAction::Operation::CREATE == action.getOperation())
 	{
-		auto [method, uri] = getEndpointByOperation(action.getOperation());
+		builder.append_query("email", action.getUserEmail());
+	}
+	else if (ClientAction::Operation::UPDATE == action.getOperation())
+	{
+		builder.append_query("updated_name", action.getUpdatedUserName());
+	}
 
-		web::http::uri_builder builder{uri};
-		builder.append_query("user", action.getUserName());
-
-		if (ClientAction::Operation::CREATE == action.getOperation())
-		{
-			builder.append_query("email", action.getUserEmail());
-		}
-		else if (ClientAction::Operation::UPDATE == action.getOperation())
-		{
-			builder.append_query("updated_name", action.getUpdatedUserName());
-		}
-
-		web::http::client::http_client client{HOSTNAME};
-
-		client.request(method, builder.to_string())
-		      .then([](const web::http::http_response& response)
-			        {
-					    std::cout << "Request executed successfully, server response is: " << response.to_string() << "\n\n\n";
-				    })
-		      .wait();
-	}};
-
-	doActionThread.detach();
+	web::http::client::http_client client{HOSTNAME};
+	client.request(method, builder.to_string())
+	      .then([](const web::http::http_response& response)
+		        {
+				    std::cout << "Request executed successfully, server response is: " << response.to_string() << "\n\n\n";
+			    })
+	      .wait();
 }
+
+
+

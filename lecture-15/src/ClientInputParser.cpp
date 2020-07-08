@@ -1,5 +1,6 @@
 #include "ClientInputParser.h"
 #include "Client.h"
+#include "ClientAction.h"
 
 #include <stdexcept>
 #include <string>
@@ -33,6 +34,14 @@ ClientInputParser::~ClientInputParser() = default;
 std::vector<std::unique_ptr<Client>> ClientInputParser::buildClients() const
 {
 	std::vector<std::unique_ptr<Client>> clientList{};
+
+	auto client = std::make_unique<Client>();
+
+	auto action = std::make_unique<ClientAction>("read", "My User Name");
+
+	client->addAction(std::move(action));
+
+	clientList.push_back(std::move(client));
 
 	return clientList;
 }
