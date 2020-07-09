@@ -26,11 +26,13 @@ set(OPENSSL_SSL_LIBRARY, ${OPENSSL_ROOT_DIR}/lib/libssl.dylib CACHE FILEPATH "" 
 find_package(cpprestsdk REQUIRED)
 
 add_executable(toolproject
-		       src/Client.cpp
-		       src/ClientAction.cpp
+		           src/Client.cpp
+		           src/ClientAction.cpp
                src/ClientInputParser.cpp
-		       src/Main.cpp
-		       src/Server.cpp
+               src/InMemoryStorageEngine.cpp
+		           src/Main.cpp
+		           src/Server.cpp
+               src/StorageEngineIntf.cpp
               )
 
 target_include_directories(toolproject

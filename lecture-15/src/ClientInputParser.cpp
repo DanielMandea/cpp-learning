@@ -2,6 +2,8 @@
 #include "Client.h"
 #include "ClientAction.h"
 
+#include <cpprest/json.h>
+
 #include <stdexcept>
 #include <string>
 
@@ -29,44 +31,42 @@ namespace
 			std::ifstream file("/resources/client_operations.json");
 			std::string s;
 			web::json::value v;
-			if(f)
+			if(file)
 			{
-				s << file.rdbuf();
+				file >> s;
 				file.close();
-				v = web::json::parse(s);
+				v = web::json::value::parse(s);
 			}
 			return v;
 		}
 		catch(web::json::json_exception exception)
 		{
 			std::cout << "json parsing exception: " << exception.what();
-			break;
 		}
 		return web::json::value{};
 	}
 
-	Client processBatches(web::json::array batch) 
+	std::unique_ptr<Client> processBatches(web::json::array batch) 
 	{
-		Client client{};
-		for(auto it2 = batch.as_array().cbegin(); it2 != batch.as_array().cend(); ++it2)
+		std::unique_ptr<Client> client = std::make_unique<Client>();
+		for(auto it2 = batch.cbegin(); it2 != batch.cend(); ++it2)
 		{
-			auto operation = it2.at(U("operation")).as_string();
-			auto name = it2.at(U("name")).as_string();
+			auto operation = it2->at(U("operation")).as_string();
+			auto name = it2->at(U("name")).as_string();
 
-			ClientAction action{operation, name};
+			std::unique_ptr<ClientAction> action = std::make_unique<ClientAction>(operation, name);
 
 			if("create" == operation)
 			{
-				auto email = it2.at(U("email")).as_string();
-				action.setUserEmail(email);
+				auto email = it2->at(U("email")).as_string();
+				action->setUserEmail(email);
 			}
 			if("update" == operation)
 			{
-				auto updatedName = it2.at(U("updated_name")).as_string();
-				action.setUpdatedUserName(updatedName);
+				auto updatedName = it2->at(U("updated_name")).as_string();
+				action->setUpdatedUserName(updatedName);
 			}
-
-			client.addAction(action);
+			client->addAction(std::move(action));
 		}
 		return client;
 	}
