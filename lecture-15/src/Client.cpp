@@ -95,10 +95,7 @@ void Client::doAction(const ClientAction& action) const
 	client.request(method, builder.to_string())
 	      .then([](const web::http::http_response& response)
 		        {
-				    std::cout << "Request executed successfully, server response is: " << response.to_string() << "\n\n\n";
+				    std::cout << "Request executed successfully, response is: " << response.to_string() << "\n\n";
 			    })
 	      .wait();
 }
-
-
-

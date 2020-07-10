@@ -2,13 +2,7 @@
 
 #include <vector>
 
-namespace web
-{
-	namespace http
-	{
-		class http_request;
-	}
-}
+namespace web::http { class http_request; }
 
 class Server
 {
@@ -18,7 +12,7 @@ public:
 private:
 	using ListenerList = std::vector<web::http::experimental::listener::http_listener>;
 
-	ListenerList mListenerList{};
+	ListenerList mListenerList;
 
 	void handleRequest(const web::http::http_request& request);
 };
