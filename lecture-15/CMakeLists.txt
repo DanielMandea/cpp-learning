@@ -15,7 +15,7 @@ set(CMAKE_RUNTIME_STORAGE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin/storage/keys)
 
 add_definitions(-Wall)
 
-set(OPENSSL_ROOT_DIR, /Users/theodorserbana/.conan/data/openssl/1.1.1g/_/_/package/95382baad1eea282b0204228603f9795cf17a845/)
+set(OPENSSL_ROOT_DIR, /usr/local/Cellar/openssl@1.1/1.1.1g)
 
 set(OPENSSL_INCLUDE_DIR, ${OPENSSL_ROOT_DIR}/include CACHE FILEPATH "" FORCE)
 
@@ -26,12 +26,12 @@ set(OPENSSL_SSL_LIBRARY, ${OPENSSL_ROOT_DIR}/lib/libssl.dylib CACHE FILEPATH "" 
 find_package(cpprestsdk REQUIRED)
 
 add_executable(toolproject
-		           src/Client.cpp
-		           src/ClientAction.cpp
+			   src/Client.cpp
+			   src/ClientAction.cpp
                src/ClientInputParser.cpp
                src/InMemoryStorageEngine.cpp
-		           src/Main.cpp
-		           src/Server.cpp
+			   src/Main.cpp
+			   src/Server.cpp
                src/StorageEngineIntf.cpp
               )
 

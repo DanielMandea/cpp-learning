@@ -1,5 +1,6 @@
 #include "Client.h"
 #include "ClientInputParser.h"
+#include "InMemoryStorageEngine.h"
 #include "Server.h"
 
 #include <iostream>
@@ -8,7 +9,8 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		Server server{};
+//	    std::unique_ptr<InMemoryStorageEngine> memoryStorage();
+		Server server{std::make_unique<InMemoryStorageEngine>()};
 		ClientInputParser clientInputParser{argc, argv};
 
 		const auto clientList = clientInputParser.buildClients();
