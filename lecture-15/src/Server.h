@@ -1,7 +1,6 @@
 #include <cpprest/http_listener.h>
 
 #include <memory>
-#include <vector>
 
 namespace web::http { class http_request; }
 
@@ -10,14 +9,17 @@ class StorageEngineIntf;
 class Server
 {
 public:
-	Server(std::unique_ptr<StorageEngineIntf> storageEngine);
+	explicit Server(std::unique_ptr<StorageEngineIntf> storageEngine);
 
 private:
-	using ListenerList = std::vector<web::http::experimental::listener::http_listener>;
+    web::http::experimental::listener::http_listener mListener;
+	std::unique_ptr<StorageEngineIntf> mStorageEngine;
 
-	ListenerList mListenerList;
+	void handlePostRequest(const web::http::http_request& request);
 
-	std::unique_ptr<StorageEngineIntf> mStorageEngine{};
+	void handleGetRequest(const web::http::http_request& request);
 
-	void handleRequest(const web::http::http_request& request, const std::function<bool()>& handler);
+	void handlePutRequest(const web::http::http_request& request);
+
+	void handleDeleteRequest(const web::http::http_request& request);
 };

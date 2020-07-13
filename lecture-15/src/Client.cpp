@@ -10,7 +10,7 @@
 
 namespace
 {
-	const std::string HOSTNAME = "http://localhost:8080/";
+    constexpr const char* HOSTNAME{"http://localhost:8080"};
 
 	std::tuple<web::http::method, std::string> getEndpointByOperation(ClientAction::Operation operation)
 	{
@@ -78,7 +78,7 @@ void Client::doAction(const ClientAction& action) const
 {
 	auto [method, uri] = getEndpointByOperation(action.getOperation());
 
-	web::http::uri_builder builder{uri};
+	web::http::uri_builder builder{"/users"};
 	builder.append_query("user", action.getUserName());
 
 	if (ClientAction::Operation::CREATE == action.getOperation())
