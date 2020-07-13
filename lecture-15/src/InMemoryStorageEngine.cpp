@@ -5,22 +5,22 @@ InMemoryStorageEngine::InMemoryStorageEngine()
 	
 }
 
-void InMemoryStorageEngine::create()
+bool InMemoryStorageEngine::create()
 {
 
 }
 
-void InMemoryStorageEngine::read()
+bool InMemoryStorageEngine::read()
 {
 
 }
 
-void InMemoryStorageEngine::update()
+bool InMemoryStorageEngine::update()
 {
 
 }
 
-void InMemoryStorageEngine::delette()
+bool InMemoryStorageEngine::delette()
 {
 
 }

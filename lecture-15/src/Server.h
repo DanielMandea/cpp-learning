@@ -19,5 +19,5 @@ private:
 
 	std::unique_ptr<StorageEngineIntf> mStorageEngine{};
 
-	void handleRequest(const web::http::http_request& request);
+	void handleRequest(const web::http::http_request& request, const std::function<bool()>& handler);
 };

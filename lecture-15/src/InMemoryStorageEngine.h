@@ -5,11 +5,11 @@ class InMemoryStorageEngine : public StorageEngineIntf
 public:
 	InMemoryStorageEngine();
 	
-	virtual void create() override;
+	virtual bool create() override;
 	
-	virtual void read() override;	
+	virtual bool read() override;
 	
-	virtual void update() override;
+	virtual bool update() override;
 	
-	virtual void delette() override;
+	virtual bool delette() override;
 };

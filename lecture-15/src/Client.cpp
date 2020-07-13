@@ -15,26 +15,25 @@ namespace
 	std::tuple<web::http::method, std::string> getEndpointByOperation(ClientAction::Operation operation)
 	{
 		switch (operation)
-
 		{
 			case ClientAction::Operation::CREATE:
 			{
-				return std::make_tuple(web::http::methods::POST, "/create");
+				return std::make_tuple(web::http::methods::POST, "/users");
 			}
 
 			case ClientAction::Operation::READ:
 			{
-				return std::make_tuple(web::http::methods::GET, "/read");
+				return std::make_tuple(web::http::methods::GET, "/users");
 			}
 
 			case ClientAction::Operation::UPDATE:
 			{
-				return std::make_tuple(web::http::methods::POST, "/update");
+				return std::make_tuple(web::http::methods::PUT, "/users");
 			}
 
 			case ClientAction::Operation::DELETE:
 			{
-				return std::make_tuple(web::http::methods::DEL, "/delete");
+				return std::make_tuple(web::http::methods::DEL, "/users");
 			}
 
 			default:
