@@ -1,15 +1,78 @@
 #include "StorageEngineIntf.h"
 
-class InMemoryStorageEngine : public StorageEngineIntf 
+#include <unordered_map>
+
+template <typename EntityT>
+class InMemoryStorageEngine : public StorageEngineIntf<EntityT>
 {
 public:
+    using typename StorageEngineIntf<EntityT>::StorageKey;
 	InMemoryStorageEngine();
-	
-	virtual bool create() override;
-	
-	virtual bool read() override;
-	
-	virtual bool update() override;
-	
-	virtual bool delette() override;
+
+    virtual StorageKey create(const EntityT& entity) override;
+
+    virtual const EntityT& read(const StorageKey& key) const override;
+
+    virtual std::vector<const EntityT&> read() const override;
+
+    virtual void update(const StorageKey& key, const EntityT& entity) override;
+
+    virtual void delette(const StorageKey& key) override;
+
+private:
+    std::unordered_map<StorageKey, EntityT> mEntityMap;
 };
+
+template <typename EntityT>
+InMemoryStorageEngine<EntityT>::InMemoryStorageEngine()
+: mEntityMap{}
+{
+
+}
+
+template <typename EntityT>
+typename InMemoryStorageEngine<EntityT>::StorageKey InMemoryStorageEngine<EntityT>::create(const EntityT& entity)
+{
+    if (mEntityMap.find(entity.computeStorageKey()) == mEntityMap.end())
+    {
+        mEntityMap.emplace(entity.computeStorageKey(), entity);
+    }
+    else
+    {
+        throw std::runtime_error{"Key" + entity.computeStorageKey() + " already in the map"};
+    }
+}
+
+template <typename EntityT>
+const EntityT& InMemoryStorageEngine<EntityT>::read(const StorageKey& key) const
+{
+    auto itr = mEntityMap.find(key);
+    if (itr != mEntityMap.end())
+    {
+        return itr->second;
+    }
+    throw std::runtime_error{"Key" + key + " not found in the map"};
+}
+
+template <typename EntityT>
+std::vector<const EntityT&> InMemoryStorageEngine<EntityT>::read() const
+{
+    std::vector<const EntityT&> entities{};
+
+    for(const auto& [key, entity] : mEntityMap)
+    {
+        entities.push_back(entity);
+    }
+}
+
+template <typename EntityT>
+void InMemoryStorageEngine<EntityT>::update(const StorageKey& key, const EntityT& entity)
+{
+
+}
+
+template <typename EntityT>
+void InMemoryStorageEngine<EntityT>::delette(const StorageKey& key)
+{
+
+}

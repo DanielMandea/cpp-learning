@@ -5,22 +5,12 @@ InMemoryStorageEngine::InMemoryStorageEngine()
 	
 }
 
-bool InMemoryStorageEngine::create()
-{
-    return true;
-}
+StorageEngineIntf::StorageKey InMemoryStorageEngine::create(const EntityT& entity) = 0;
 
-bool InMemoryStorageEngine::read()
-{
-    return true;
-}
+const EntityT& InMemoryStorageEngine::read(const StorageEngineIntf::StorageKey& key) const = 0;
 
-bool InMemoryStorageEngine::update()
-{
-    return true;
-}
+std::vector<const EntityT&> InMemoryStorageEngine::read() const = 0;
 
-bool InMemoryStorageEngine::delette()
-{
-    return true;
-}
+void InMemoryStorageEngine::update(const StorageKey& key, const EntityT& entity) = 0;
+
+void InMemoryStorageEngine::delette(const StorageKey& key) = 0;
