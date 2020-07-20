@@ -1,4 +1,5 @@
 #include "Server.h"
+#include "Entity.h"
 #include "StorageEngineIntf.h"
 
 #include <functional>
@@ -23,6 +24,24 @@ Server::Server(std::unique_ptr<StorageEngineIntf> storageEngine)
                                                                std::bind(&Server::handlePostRequest,
                                                                          this,
                                                                          std::placeholders::_1)
+                                                           },
+                                                           {
+                                                                   web::http::methods::GET,
+                                                                   std::bind(&Server::handleGetRequest,
+                                                                             this,
+                                                                             std::placeholders::_1)
+                                                           },
+                                                           {
+                                                                   web::http::methods::PUT,
+                                                                   std::bind(&Server::handlePutRequest,
+                                                                             this,
+                                                                             std::placeholders::_1)
+                                                           },
+                                                           {
+                                                                   web::http::methods::DEL,
+                                                                   std::bind(&Server::handleDeleteRequest,
+                                                                             this,
+                                                                             std::placeholders::_1)
                                                            }
                                                        })
     {
@@ -34,16 +53,6 @@ Server::Server(std::unique_ptr<StorageEngineIntf> storageEngine)
 
 void Server::handlePostRequest(const web::http::http_request& request)
 {
-    mStorageEngine->create();
-
-
-    auto pathList = web::http::uri::split_path(request.request_uri().path());
-
-    // verify and process the path elements and any URI-Query data provided.
-    //
-    // valid example requests:
-    //
-
     // POST /users?name=MyUserName&email=useremailatgmail.com
     //
     // create a new user with the data retrieved from the HTTP URI query,
@@ -51,6 +60,30 @@ void Server::handlePostRequest(const web::http::http_request& request)
     // if there is missing data in the URI query, reply with BadRequest
     // if any internal error came up on the server, reply with InternalServerError
 
+    try {
+        auto pathList = web::http::uri::split_path(request.request_uri().path());
+        auto queryList = web::http::uri::split_query(request.request_uri().query());
+
+        if ((pathList.size() == 1 && pathList[0] == "/users") || pathList.size() > 2 || queryList.size() != 4) {
+            request.reply(web::http::status_codes::BadRequest);
+        }
+        else {
+            std::string name = queryList[1];
+            std::string email = queryList[3];
+            Entity entity{name, email};
+            mStorageEngine->create(entity);
+            // redirect to /users/entity.computeStorageKey()
+            request.reply(web::http::status_codes::Created);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        request.reply(web::http::status_codes::InternalError);
+    }
+}
+
+void Server::handleGetRequest(const web::http::http_request& request)
+{
     // GET /users/123
     //
     // retrieve the user with id = 123 and reply with JSON containing that user's details (status 200)
@@ -58,7 +91,30 @@ void Server::handlePostRequest(const web::http::http_request& request)
     // if any additional data is present but not needed, reply with BadRequest
 
     // GET /users --- should return list of all users
+    try {
+        auto pathList = web::http::uri::split_path(request.request_uri().path());
 
+        if (pathList.size() > 2) {
+            request.reply(web::http::status_codes::BadRequest);
+        }
+        else if (pathList.size() == 2){
+            int id = stoi(pathList[1]);
+            mStorageEngine->read(id);
+            if () {     // if the read operation has been successfully completed
+                request.reply(web::http::status_codes::OK);
+            } else {
+                request.reply(web::http::status_codes::NotFound);
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        request.reply(web::http::status_codes::InternalError);
+    }
+}
+
+void Server::handlePutRequest(const web::http::http_request& request)
+{
     // PUT /users --- reply with 405 (MethodNotAllowed)
 
     // PUT /users/123?name=MyUserName&email=blabla
@@ -66,27 +122,59 @@ void Server::handlePostRequest(const web::http::http_request& request)
     // update the record with id = 123
     // BadRequest, NotFound, InternalServerError, OK, are all possible status codes
 
-    // DEL /users/123
-    //
-    // similarly, we can have different replies with different status codes
+    try
+    {
+        auto pathList = web::http::uri::split_path(request.request_uri().path());
+        auto queryList = web::http::uri::split_path(request.request_uri().query());
 
-
-    // the line below will probably no longer fulfill our replying needs as they got more complex.
-    //
-    // request.reply(handler() ? web::http::status_codes::OK : web::http::status_codes::BadRequest);
-}
-
-void Server::handleGetRequest(const web::http::http_request& request)
-{
-    mStorageEngine->read();
-}
-
-void Server::handlePutRequest(const web::http::http_request& request)
-{
-    mStorageEngine->update();
+        if (pathList.size() == 1)
+        {
+            request.reply(web::http::status_codes::MethodNotAllowed);
+        }
+        else if(pathList.size() > 2)
+        {
+            request.reply(web::http::status_codes::BadRequest);
+        }
+        else
+        {
+            std::string name = queryList[1];
+            std::string email = queryList[3];
+            Entity entity{name, email};
+            mStorageEngine->update(entity);
+            request.reply(web::http::status_codes::OK);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        request.reply(web::http::status_codes::InternalError);
+    }
 }
 
 void Server::handleDeleteRequest(const web::http::http_request& request)
 {
-    mStorageEngine->delette();
+    // DEL /users/123
+    //
+    // similarly, we can have different replies with different status codes
+
+    try
+    {
+        auto pathList = web::http::uri::split_path(request.request_uri().path());
+
+        if (pathList.size() > 2) {
+            request.reply(web::http::status_codes::BadRequest);
+        }
+        else if (pathList.size() == 2){
+            int id = stoi(pathList[1]);
+            mStorageEngine->read(id);
+            if () {     // if the read operation has been successfully completed
+                request.reply(web::http::status_codes::OK);
+            } else {
+                request.reply(web::http::status_codes::NotFound);
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        request.reply(web::http::status_codes::InternalError);
+    }
 }
