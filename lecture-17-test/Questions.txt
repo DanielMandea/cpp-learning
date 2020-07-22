@@ -1,0 +1,29 @@
+1. What is C++? When should I use it? When not? Pros and cons of using it?
+
+2. What are the steps in the build pipeline of a C++ program?
+
+3. What does the "&" symbol mean in C++? Be as exhaustive as possible.
+
+4. What is a pure virtual method and why do we need it?
+
+5. How do we override a static method?
+
+6. Write a function that increments the given parameter. We need the incrementation to propagate outside of that function's scope. Provide at least two implementations for the function, at least one with pointers.
+
+7. How does the 'auto' keyword work? Where can we use? When should we use it? Any cases to pay attention to?
+
+8. What are smart pointers? What type of smart pointers do you know about and how do they work?
+
+9. What is a std::array? Is it any different from std::vector? How?
+
+10. Write a class Test which has an std::string member. Now use an std::unordered_map<Test, int>. What do I need to write addtionally, why and how, in order for the unordered_map to work fine?
+
+11. Write a C++ function that removes all odd numbers from a std::vector<int>. Write two variants of it, one object oriented and one functional.
+
+12. For storing a highly dynamic collection of elements that we rarely iterate, would you use an array or a linked list? Why? What if the collection is still being fairly dynamic (inserting or removing pretty often) but iterated heavily? What if you need random access for this collection?
+
+13. In an application you're designing you have a list of more than 1 million items which you rarely modify but in which you look up very frequently. What type of data structure would you use for storing these items? Feel free to treat more than one case by making your own assumptions about further needs.
+
+14. What is CppRestSdk? Write a snippet using CppRestSdk that performs a google search and outputs the result in a file that I can open with Safari.
+
+15. What is the difference between `make` and `CMake`? Which one did we use in the `toolproject`?
