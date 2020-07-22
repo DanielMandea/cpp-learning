@@ -33,7 +33,7 @@ add_executable(toolproject
 			   src/Main.cpp
 			   src/Server.cpp
                src/StorageEngineIntf.cpp
-        src/Entity.h)
+        src/Entity.h src/Entity.cpp)
 
 target_include_directories(toolproject
                            PRIVATE

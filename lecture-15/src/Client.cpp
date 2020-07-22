@@ -1,8 +1,9 @@
 #include "Client.h"
 #include "ClientAction.h"
+#include "Entity.h"
 
 #include <cpprest/http_client.h>
-
+#include <cpprest/json.h>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
@@ -90,8 +91,26 @@ void Client::doAction(const ClientAction& action) const
 		builder.append_query("updated_name", action.getUpdatedUserName());
 	}
 
+	web::http::http_request request{};
+	request.set_method(method);
+	request.set_request_uri(uri);
+	web::json::value jvalue{};
+
+	auto name = web::json::value::string(action.getUserName());
+	jvalue["name"] = name;
+	auto email = web::json::value::string(action.getUserEmail());
+	jvalue["email"] = email;
+	if (ClientAction::Operation::CREATE != action.getOperation())
+    {
+        Entity entity{name.as_string(), email.as_string()};
+        uri+= "/" + (std::to_string(entity.computeStorageKey()));
+	    jvalue["email"] = web::json::value::string(action.getUpdatedUserName());
+        request.set_request_uri(uri);
+    }
+	request.set_body(jvalue);
+
 	web::http::client::http_client client{HOSTNAME};
-	client.request(method, builder.to_string())
+	client.request(request)
 	      .then([](const web::http::http_response& response)
 		        {
 				    std::cout << "Request executed successfully, response is: " << response.to_string() << "\n\n";

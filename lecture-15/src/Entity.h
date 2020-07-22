@@ -4,22 +4,21 @@ class Entity
 {
 public:
 
+    Entity(const Entity &entity);
+
     Entity(std::string name, std::string email);
 
-    Entity(const Entity &entity) : mId{entity.getId()}, mName{entity.getName()}, mEmail{entity.getEmail()}
-    {
+    const std::string& getName() const;
 
-    }
+    const std::string& getEmail() const;
 
-    const std::string& getName() const {return mName;}
+    int getId() const;
 
-    const std::string& getEmail() const {return mEmail;}
+    void setName(const std::string &name);
 
-    int getId() const {return mId;}
+    void setEmail(const std::string &email);
 
-    void setName(std::string name) { mName = std::move(name);}
-
-    void setEmail(std::string email) { mName = std::move(email);}
+    int computeStorageKey() const;
 
 private:
     int mId;

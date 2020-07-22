@@ -1,6 +1,6 @@
-#include "StorageEngineIntf.h"
-
-StorageEngineIntf::StorageEngineIntf()
-{
-	
-}
+//#include "StorageEngineIntf.h"
+//
+//StorageEngineIntf::StorageEngineIntf()
+//{
+//
+//}
