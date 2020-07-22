@@ -9,8 +9,7 @@ int main(int argc, char** argv)
 {
 	try
 	{
-//	    std::unique_ptr<InMemoryStorageEngine> memoryStorage();
-		Server server{std::make_unique<InMemoryStorageEngine>()};
+		Server server{std::make_unique<InMemoryStorageEngine<Entity>>()};
 		ClientInputParser clientInputParser{argc, argv};
 
 		const auto clientList = clientInputParser.buildClients();

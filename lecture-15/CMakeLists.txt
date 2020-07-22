@@ -29,11 +29,10 @@ add_executable(toolproject
 			   src/Client.cpp
 			   src/ClientAction.cpp
                src/ClientInputParser.cpp
-               src/InMemoryStorageEngine.cpp
-			   src/Main.cpp
+		src/Main.cpp
 			   src/Server.cpp
                src/StorageEngineIntf.cpp
-              )
+        src/Entity.cpp src/Entity.h)
 
 target_include_directories(toolproject
                            PRIVATE

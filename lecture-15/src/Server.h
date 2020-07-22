@@ -1,19 +1,23 @@
+#include "Entity.h"
+//#include "StorageEngineIntf.h"
+
 #include <cpprest/http_listener.h>
 
 #include <memory>
 
 namespace web::http { class http_request; }
 
+template <typename EntityT>
 class StorageEngineIntf;
 
 class Server
 {
 public:
-	explicit Server(std::unique_ptr<StorageEngineIntf> storageEngine);
+	explicit Server(std::unique_ptr<StorageEngineIntf<Entity>> storageEngine);
 
 private:
     web::http::experimental::listener::http_listener mListener;
-	std::unique_ptr<StorageEngineIntf> mStorageEngine;
+	std::unique_ptr<StorageEngineIntf<Entity>> mStorageEngine;
 
 	void handlePostRequest(const web::http::http_request& request);
 

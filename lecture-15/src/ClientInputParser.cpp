@@ -84,35 +84,45 @@ std::vector<std::unique_ptr<Client>> ClientInputParser::buildClients() const
 {
 	std::vector<std::unique_ptr<Client>> clientList{};
 
+//// TESTAT, FUNCTIONEAZA
+//	auto client = std::make_unique<Client>();
+//
+//	auto action = std::make_unique<ClientAction>("create", "My User Name");
+//    action->setUserEmail("myEmail");
+//    auto action1 = std::make_unique<ClientAction>("update", "My User Name");
+//    action1->setUserEmail("myEmail");
+//    action1->setUpdatedUserName("newEmail");
+//    auto action2 = std::make_unique<ClientAction>("read", "My User Name");
+//    action2->setUserEmail("newEmail");
+//    auto action3 = std::make_unique<ClientAction>("delete", "My User Name");
+//    action3->setUserEmail("newEmail");
+//	client->addAction(std::move(action));
+//	client->addAction(std::move(action1));
+//	client->addAction(std::move(action2));
+//	client->addAction(std::move(action3));
+//
+//	clientList.push_back(std::move(client));
 
-	auto client = std::make_unique<Client>();
-
-	auto action = std::make_unique<ClientAction>("read", "My User Name");
-
-	client->addAction(std::move(action));
-
-	clientList.push_back(std::move(client));
-
-// 	try
-// 	{
-// 		web::json::value v = fileToJson();
-// 		auto array = v.at(U("batches")).as_array();
-// 		if (mNumberOfClients != array.size())
-// 		{
-// 			throw std::runtime_error{"Number of clients not matching the batch size"};
-// 		}
+ 	try
+ 	{
+ 		web::json::value v = fileToJson();
+ 		auto array = v.as_object().at("batches").as_array();
+ 		if (mNumberOfClients != array.size())
+ 		{
+ 			throw std::runtime_error{"Number of clients not matching the batch size"};
+ 		}
 
 // 		for(auto it = array.cbegin(); it != array.cend(); ++it)
 // 		{
 // 			auto batches = it;
-// 			clientList.push_back(processBatches(batch));
+            std::unique_ptr<Client> client = processBatches(array);
+ 			clientList.push_back(std::move(client));
 // 		}
-// 	}
-// 	catch(web::json::json_exception exception)
-// 	{
-// 		std::cout << "error parsing json: " << exception.what();
-// 		break;
-// 	}
+ 	}
+ 	catch(web::json::json_exception exception)
+ 	{
+ 		std::cout << "error parsing json: " << exception.what();
+ 	}
 
 	return clientList;
 }
