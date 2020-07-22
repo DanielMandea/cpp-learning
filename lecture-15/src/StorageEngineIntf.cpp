@@ -1,6 +1,7 @@
-#include "StorageEngineIntf.h"
-
-StorageEngineIntf::StorageEngineIntf()
-{
-	
-}
+//#include "StorageEngineIntf.h"
+//
+////template <typename EntityT>
+//StorageEngineIntf::StorageEngineIntf()
+//{
+//
+//}

@@ -1,5 +1,6 @@
 #include "StorageEngineIntf.h"
 
+#include <string>
 #include <unordered_map>
 
 template <typename EntityT>
@@ -9,15 +10,15 @@ public:
     using typename StorageEngineIntf<EntityT>::StorageKey;
 	InMemoryStorageEngine();
 
-    virtual StorageKey create(const EntityT& entity) override;
+    StorageKey create(const EntityT& entity) override;
 
-    virtual const EntityT& read(const StorageKey& key) const override;
+    const EntityT& read(const StorageKey& key) const override;
 
-    virtual std::vector<const EntityT&> read() const override;
+    std::vector<std::reference_wrapper<const EntityT>> read() const override;
 
-    virtual void update(const StorageKey& key, const EntityT& entity) override;
+    void update(const StorageKey& key, const EntityT& entity) override;
 
-    virtual void delette(const StorageKey& key) override;
+    void delette(const StorageKey& key) override;
 
 private:
     std::unordered_multimap<StorageKey, EntityT> mEntityMap;
@@ -36,52 +37,55 @@ typename InMemoryStorageEngine<EntityT>::StorageKey InMemoryStorageEngine<Entity
     if (mEntityMap.find(entity.computeStorageKey()) == mEntityMap.end())
     {
         mEntityMap.emplace(entity.computeStorageKey(), entity);
+        return entity.computeStorageKey();
     }
-    else
-    {
-        throw std::runtime_error{"Key" + entity.computeStorageKey() + " already in the map"};
-    }
+
+    throw std::runtime_error{"Key" + std::to_string(entity.computeStorageKey()) + " already in the map"};
 }
 
 template <typename EntityT>
 const EntityT& InMemoryStorageEngine<EntityT>::read(const StorageKey& key) const
 {
 
-    auto range = mEntityMap.equal_range(key);
-    std::vector<EntityT> entities();
+//    auto range = mEntityMap.equal_range(key);
+    std::vector<EntityT> entities{};
 
-    std::transform(range.first, range.second, entities.begin(), [&](const std::pair<StorageKey, EntityT>& entity){
-        return entity.second;
-    });
+
+//    std::transform(range.first, range.second, entities.begin(), [&](const std::pair<StorageKey, EntityT>& entity){
+//        return entity.second;
+//    });
     auto itr = mEntityMap.find(key);
     if (itr != mEntityMap.end())
     {
         return itr->second;
     }
-    throw std::runtime_error{"Key" + key + " not found in the map"};
+    throw std::runtime_error{"Key" + std::to_string(key) + " not found in the map"};
 }
 
 template <typename EntityT>
-std::vector<const EntityT&> InMemoryStorageEngine<EntityT>::read() const
+std::vector<std::reference_wrapper<const EntityT>> InMemoryStorageEngine<EntityT>::read() const
 {
-    std::vector<const EntityT&> entities{};
+    std::vector<std::reference_wrapper<const EntityT>> entities{};
 
     for(const auto& [key, entity] : mEntityMap)
     {
-        entities.push_back(entity);
+        entities.push_back(std::cref(entity));
     }
+
+    return entities;
 }
 
 template <typename EntityT>
 void InMemoryStorageEngine<EntityT>::update(const StorageKey& key, const EntityT& entity)
 {
-    if (mEntityMap.find(entity.computeStorageKey()) != mEntityMap.end())
+    if (mEntityMap.find(key) != mEntityMap.end())
     {
-        mEntityMap[entity.computeStorageKey()] = entity;
+        delette(key);
+        create(entity);
     }
     else
     {
-        throw std::runtime_error{"Key" + entity.computeStorageKey() + " not found in the map"};
+        throw std::runtime_error{"Key" + std::to_string(key) + " not found in the map"};
     }
 }
 
@@ -95,6 +99,6 @@ void InMemoryStorageEngine<EntityT>::delette(const StorageKey& key)
     }
     else
     {
-        throw std::runtime_error{"Key" + key + " not found in the map"};
+        throw std::runtime_error{"Key" + std::to_string(key) + " not found in the map"};
     }
 }

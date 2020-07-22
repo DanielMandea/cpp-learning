@@ -1,10 +1,12 @@
 #include "Client.h"
 #include "ClientAction.h"
+#include "Entity.h"
 
 #include <cpprest/http_client.h>
 
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <tuple>
 
@@ -78,20 +80,29 @@ void Client::doAction(const ClientAction& action) const
 {
 	auto [method, uri] = getEndpointByOperation(action.getOperation());
 
-	web::http::uri_builder builder{"/users"};
-	builder.append_query("user", action.getUserName());
+    web::http::http_request request{};
+	request.set_method(method);
+	request.set_request_uri(uri);
+	web::json::value jvalue{};
 
-	if (ClientAction::Operation::CREATE == action.getOperation())
-	{
-		builder.append_query("email", action.getUserEmail());
-	}
-	else if (ClientAction::Operation::UPDATE == action.getOperation())
-	{
-		builder.append_query("updated_name", action.getUpdatedUserName());
-	}
+
+	auto name = web::json::value::string(action.getUserName());
+    jvalue["name"] = name;
+    auto email = web::json::value::string(action.getUserEmail());
+    jvalue["email"] = email;
+
+    if (ClientAction::Operation::CREATE != action.getOperation()) {
+        Entity entity{name.as_string(), email.as_string()};
+        uri += "/" + std::to_string(entity.computeStorageKey());
+
+        jvalue["email"] = web::json::value::string(action.getUpdatedUserName());
+        request.set_request_uri(uri);
+
+    }
+    request.set_body(jvalue);
 
 	web::http::client::http_client client{HOSTNAME};
-	client.request(method, builder.to_string())
+	client.request(request)
 	      .then([](const web::http::http_response& response)
 		        {
 				    std::cout << "Request executed successfully, response is: " << response.to_string() << "\n\n";
