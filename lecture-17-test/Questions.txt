@@ -1,29 +1,286 @@
 1. What is C++? When should I use it? When not? Pros and cons of using it?
 
+C++ is a powerful general-purpose programming language.
+One of the biggest advantages of C++ is the feature of object-oriented programming which includes concepts like classes, inheritance, polymorphism, data abstraction, and encapsulation that allow code reusability and makes a program even more reliable.
+
+Some cons of using it: Pointers are a relatively difficult concept and it consumes a lot of memory.
+
 2. What are the steps in the build pipeline of a C++ program?
+
+step 1: Preprocessing : Handles the preprocessor directives, like #include and #define
+
+step 2: Compiling : passes the source code and converts it into an assembly code
+
+step 3: Assembling: produces actual binary file
+
+step 4: Linking: produces the final compilation output from the object files
 
 3. What does the "&" symbol mean in C++? Be as exhaustive as possible.
 
+The "&" symbol is used as an unary operation on a variable that returns its adress.
+Also it is used to mark a reference to an object/value.
+
+a)
+int a = 10;
+std::cout<<&a; //returns the address of the variable;
+
+b)
+
+ int number = 3;
+ int & refNumber = number; // Declare a reference (alias) to the variable number
+
+c)
+
+void fct(int &a)
+{
+	int b = 1;
+	a = &b; //a points to the location of b
+}
+fct(a)
+cout<<a; //prints 1
+
 4. What is a pure virtual method and why do we need it?
+
+ A pure virtual method is a virtual function that is required to be implemented by a derived class.
+
+ virtual void function() = 0;
 
 5. How do we override a static method?
 
+We overrinde a static method by placing "static" keyword in methods signature
+
+// Example program
+#include <iostream>
+#include <string>
+
+class A 
+{
+    public:
+    static void print()
+    {
+        std::cout<<"print class";
+    }
+    
+};
+
+class B : public A
+{
+    public:
+    static void print() override
+    {
+        std::cout<<"B"
+    }
+};
+
+int main()
+{
+    A *obj = new B{};
+    obj->print() //prints A
+}
+
+
 6. Write a function that increments the given parameter. We need the incrementation to propagate outside of that function's scope. Provide at least two implementations for the function, at least one with pointers.
+
+void increment(int *a)
+{
+	*a += 5;	
+}
+
+void increment (int &a)
+{
+	a += 5
+}
+
+int a = 10;
+increment(a);
 
 7. How does the 'auto' keyword work? Where can we use? When should we use it? Any cases to pay attention to?
 
+The auto keyword specifies that the type of the variable that is being declared will be automatically deducted from its initializer.
+We use it when we don't need to know the type of variable or when the type will suffer changes during the implementation.
+
+a)
+    int count = 10;
+    int& countRef = count;
+    auto myAuto = countRef;
+
+    countRef = 11;
+    std::cout << count << " "; //11
+
+    myAuto = 12;
+    std::cout << count ; //11
+
+b)
+auto fc = fct(); // flexible if function is going to change
+
+c) 
+std::set<std::string> st;
+for (auto it = st.begin(); it != st.end(); it++) 
+{
+	...
+}
+
+
 8. What are smart pointers? What type of smart pointers do you know about and how do they work?
+
+Smart pointers automatically manage memory and they will deallocate the object when they are not in use when the pointer is going out of scope automatically it’ll deallocate the memory.
+There are 3 types of smart-pointers:
+unique pointers: used in a location and cannot be sent to functions
+shared pointers: can be used in multiple places and holds a reference counter
+weak pointers
+
+// Example program
+#include <iostream>
+#include <string>
+#include <memory>
+
+class Rectangle { 
+    int length; 
+    int width; 
+  
+public: 
+    Rectangle(int l, int w) 
+    { 
+        length = l; 
+        width = w; 
+    } 
+  
+    int area() 
+    { 
+        return length * width; 
+    } 
+}; 
+  
+int main() 
+{ 
+
+//unique pointer:
+  
+    std::unique_ptr<Rectangle> p1(new Rectangle(10, 2)); 
+    std::cout << p1->area(); // 20
+  
+    std::unique_ptr<Rectangle> p2; 
+    p2 = std::move(p1); 
+  
+    std::cout << p2->area(); //20
+  
+  //shared pointer
+
+  	std::shared_ptr<Rectangle> p1(new Rectangle(10, 2)); 
+    std::cout << p1->area();
+  
+    std::shared_ptr<Rectangle> p2; 
+    p2 = p1; 
+
+    std::cout << p2->area(); //20
+ 
+    std::cout << p1->area(); // reference Counter becomes 2 
+    
+} 
+
+
 
 9. What is a std::array? Is it any different from std::vector? How?
 
+std::array is more limited than std::vector, but it's often more efficient, especially for small sizes. We must give its size when creating it, while std::vector is dynamic and its size is incremented as long as the objects are inserted.
+std::vector has random access and std::array does not because in order to reach an element, the array has to be given an index, but with vector, we can go to its location.
+
+std::array<int, 5> a{1,2,3,4};
+std::vector<int> v{1,2,3,4};
+
+a.insert(5); //error
+v.push_back(15); // inserts another integer
+
+
 10. Write a class Test which has an std::string member. Now use an std::unordered_map<Test, int>. What do I need to write addtionally, why and how, in order for the unordered_map to work fine?
+
+template<>
+struct std::hash<Test>
+{
+	size_t operator()(const Test& t)
+	{
+		return std::hash<string>()(t.key);
+	}
+}
+
+class Test
+{
+private:
+	std::string key{};
+}
+
+int main()
+{
+	std::unordered_map<Test, int> myMap{};
+}
 
 11. Write a C++ function that removes all odd numbers from a std::vector<int>. Write two variants of it, one object oriented and one functional.
 
+std::vector<int> vector {1,2,3,4,5};
+
+//object oriented
+
+for (auto it = vector.begin(); it != vector.end(); it++)
+{
+	if (*it % 2 == 0)
+	{
+		it--;
+	}
+	else
+	{
+		it = vector.erase(it);
+	}
+}
+
+
+//functional
+
+std::transform(vector.begin(), vector.end(), vector.begin, [&](int i){
+	if (i % 2 ==1)
+	{
+		vector.erase(i);
+	}
+});
+
+
+
+
 12. For storing a highly dynamic collection of elements that we rarely iterate, would you use an array or a linked list? Why? What if the collection is still being fairly dynamic (inserting or removing pretty often) but iterated heavily? What if you need random access for this collection?
+
+If we rarely iterate through collection, I think we should use a linked list.
+In the case of random insert, the linked list (std::list) should be much faster, its insert operation being in O(1) versus O(n) for an array (vector).
+If we need random access, we should use an array (std::vector).
+
 
 13. In an application you're designing you have a list of more than 1 million items which you rarely modify but in which you look up very frequently. What type of data structure would you use for storing these items? Feel free to treat more than one case by making your own assumptions about further needs.
 
+We can use an unordered map because we rarely modify it and because the access time is O(1). If we have an array of objects that need to be stored, we will use an unordered multimap.
+
+
 14. What is CppRestSdk? Write a snippet using CppRestSdk that performs a google search and outputs the result in a file that I can open with Safari.
 
+CppRestSdk is a framework designed by Microsoft that aims to help developing connections or interactions with services.
+
+	std::fstream file{"response.html"};
+	web::http::client::http_client client{"http://www.google.com/"};
+	web::http::uri_builder builder{"/search"};
+	builder.append_query("q", "im feeling lucky");
+
+	client.request(web::http::methods::GET, builder.to_string())
+		.then([&](const web::http::http_response& response)
+	{
+		return response.extract_string();
+	})
+		.then([&](const std::string& httpResponseBody)
+	{
+		file << httpResponseBody;
+		file.close();
+	})
+	.wait();
+}
+
 15. What is the difference between `make` and `CMake`? Which one did we use in the `toolproject`?
+
+CMake is used for creating build environment. It takes CMakeLists.txt as input and generates Makefile.
+When using Cmake, we have to specify the path to the files, but when we use make, we have to write what files have to be processed.
+
