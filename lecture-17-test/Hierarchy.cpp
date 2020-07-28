@@ -72,7 +72,7 @@ int main()
 
     std::cout << "\n\n\n";
 
-    delete inst0;
+    delete[] inst0;
     delete inst1; 
     delete inst2; 
     delete inst3; 
@@ -82,6 +82,32 @@ int main()
     // Questions:
     //
     // 1. What is the output of the program?
+
+    // Functions f1(), f2() are virtual in Base class and therefore they will be called late at runtime, wich means their implementation from the derived class is going to matter.
+    // Because f3() function from the base class is not virtual, it will be called early at compile time and therefore the result will be:
+    // B::f1() value = 1
+    // B::f2()
+    // A::f3()
+    // B::f1() value = 1
+    // B::f2()
+    // A::f3()
+    // B::f1() value = 500
+    // B::f2()
+    // B::f3()
+    // A::f1() value = 5
+    // A::f2()
+    // A::f3()
+
+    //~A() 10 times
+//    ~A() 
+//    ~B() 
+//    ~A() 
+//    ~A()
+
     //
     // 2. What potential issues can you find with this implementation? Propose any kind of changes that would improve it.
+
+    //Deleting the objects from both base and derived class which have a non-virtual destructor might be a problem
+    //As for the changes I would sugest using a function that takes a reference of interface type and let the runtime call decide which method should be called
+
 }

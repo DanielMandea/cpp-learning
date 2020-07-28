@@ -1,11 +1,66 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <stdexcept>
 #include <type_traits>
 
 // this is for the "1s" things to actually mean 1 second
 //
 using namespace std::chrono;
+
+template <typename T>
+class MutableRef
+{
+public:
+	MutableRef()
+	: mRef{}
+	{
+
+	}
+
+	// MutableRef(T& val)
+	// : mRef{}
+	// {
+	// 	*mRef = val;
+	// }
+
+	MutableRef(const MutableRef<T>& ref)
+	: mRef{ref}
+	{
+
+	}
+
+	T& operator*()
+	{
+		if (mRef)
+		{
+			return *mRef;
+		}
+
+		throw std::runtime_error("Invalid access to uninitialized MutableRef");
+
+	}
+
+	const T& operator*() const
+	{
+		if (mRef)
+		{
+			return *mRef;
+		}
+
+		throw std::runtime_error("Invalid access to uninitialized MutableRef");
+
+	}
+
+	// const T& getStoredReference() const
+	// {
+	// 	auto val = std::cref(MutableRef<T>{*mRef});
+	// 	return *val;
+	// }
+	
+private:
+	T *mRef;
+};
 
 template<typename T>
 T& doSomething()
@@ -34,13 +89,13 @@ T& doSomething()
 		}
 	}
 
-	return ref;
+	return *ref;
 }
 
 template<typename MutableRefT>
 void doSomethingElse(const MutableRefT& ref)
 {
-	const int& x = ref;
+	const int& x = *ref;
 	const int& y = x;
     
     // just to get rid of the unused variable warnings
