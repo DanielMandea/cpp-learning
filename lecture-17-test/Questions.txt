@@ -1,29 +1,278 @@
 1. What is C++? When should I use it? When not? Pros and cons of using it?
 
+C++ is a programming language that combines high-speed programming with object-oriented programming, therefore being very flexible.
+We should use it when we need our app to have high performance and if we need to go to a lower level of programming than, for instance, Java lets us.
+Some cons of C++ include: the need for lower-level understanding of programming principles, not having as many library managers than other languages.
+
+
 2. What are the steps in the build pipeline of a C++ program?
+
+It has three main steps: preprocessing, compiling and linking. Preprocessing does all the #include, #define, etc. stuff, compiling verifies most of the errors and exceptions, and outputs the .o file, which is passed to the linking step, where the final file is created.
+
 
 3. What does the "&" symbol mean in C++? Be as exhaustive as possible.
 
+The "&" symbol 
+	is used as a unary operation on a variable, which returns its address, meaning a pointer;
+	if is also used to mark a reference to an object/variable, if we need to modify it inside a function;
+
+a) int a = 10;
+int *const alias = a;
+int b = 20;
+alias = b;
+std::cout << &a; will output 0xFFAB0912, the address of a
+b = *(&a);
+std::cout << b; // b = 10
+
+b) void foo(int& aParam) 
+{
+	int b = 11;
+	aParam = &b; // a will point to the location of b now
+}
+
+foo(a);
+std::cout << a; // will print 11
+
+
 4. What is a pure virtual method and why do we need it?
+
+Pure virtual functions are used to mask a class as interface, because C++ does not differentiate the two. They have to be implemenented by the classes which inherit the interface.
+
+virtual void foo() = 0;
+
 
 5. How do we override a static method?
 
+Overridden static methods must have the "static" keyword before the signature.
+
+class A
+{
+    public:
+	static void printClass()
+	{
+		std::cout << "A";
+	}
+};
+
+class B : public A
+{
+    public:
+	static void printClass() override
+	{
+		std::cout << "B";
+	}
+};
+
+int main()
+{
+	A* obj = new B{};
+	obj->printClass();	// prints "A"
+}
+
+
+
 6. Write a function that increments the given parameter. We need the incrementation to propagate outside of that function's scope. Provide at least two implementations for the function, at least one with pointers.
+
+void increment(int *a)
+{
+	*a += 5;
+}
+
+void increment(int& a)
+{
+	a += 5;
+}
+
+int a = 10;
+increment(a);
+
 
 7. How does the 'auto' keyword work? Where can we use? When should we use it? Any cases to pay attention to?
 
+The "auto" keyword helps us with type matching. 
+	We can use it when we do not neccessarily need to know the type of a variable (for instance when iterating through an array), 
+	or if we want to write a code which is prone to type changes.
+	We need to pay attention that auto is a type, so if we somehow need a const reference to a type, we must write "const auto&" when we declare it 
+
+for (auto itr : list) { ... } // in case the type is unknown or doesn't matter that much
+
+auto a = foo(); 	// ensures some kind of flexibility if the function can be changed in the future
+
+class A 
+{
+    public: 
+    int member;
+};
+
+int main()
+{
+    A a1{};
+    A a2{};
+    a1.member = 1;
+    a2.member = 2;
+    std::vector<const A&> list{};
+    list.emplace_back(a1);
+    list.emplace_back(a2);
+	for (const auto& itr : list) {
+	    std::cout << itr->member;   
+	}
+}
+
 8. What are smart pointers? What type of smart pointers do you know about and how do they work?
+
+Smart pointers are the way C++ helps solve memory issues when working with raw pointers. They can be treated as raw pointers, but they are more effective when we have lots of them and freeing the memory would be a hassle.
+There are 3 types of smart pointers:
+	unique pointers, which can only be used in a location and cannot be sent to functions
+	shared pointers, which can be used in multiple places and hold a reference counter
+	weak pointers, which can be instantiated as empty and then, later in the program, point to a value 
+
+void foo(std::unique_ptr<int> a)
+{
+	std::cout << *a;
+}
+
+void foo(std::shared_ptr<int> a)
+{
+	std::cout << *a;
+}
+
+int main() 
+{
+	int a = 10;
+	std::unique_ptr<int> ptr = std::make_unique<int>(a);
+	std::cout << *ptr;		// will print 10
+	*ptr = 11;
+	std::cout << a; 	// will print 10, because modifying the pointed value does not modify the variable value
+
+/*
+	int &ref = a;		// if we would have done the same using references, a would have also been modified
+	ref++;
+	std::cout << a;		// prints 11
+*/
+
+	// to pass this pointer to a function, we need to use std::move(ptr), but it "completely" moves it, so we cannot access it in this location anymore
+	foo(std::move(ptr));	// will print 10
+	std::cout << *ptr;		// will throw an exception/error (?)
+
+	std::shared_ptr<int> shared = std::make_shared<int> a;
+	std::cout << *shared;	// will print 10
+	foo(a);					// will print 10
+	std::cout << *shared;	// works
+
+}
+
 
 9. What is a std::array? Is it any different from std::vector? How?
 
+std::vector has random access, and std::array doesn't, meaning that in order to reach a certain element, the array has to be given an index, unlike the vector, where we can directly go to its location.
+another difference is that std::array must be given its size when creating it, while std::vector is dynamic and its size is incremented as long as objects are inserted
+
+std::array<int, 5> a{1,2,3,4,5};
+std::vector<int> b{1,2,3,4,5};
+
+array.insert(6);	// index out of bounds (?)
+vector.insert(6);	// inserts another int 
+
+array[3] is 3 sizeof(int)'s away from the beginning of the array
+vector[3] is somewhere else in the memory
+
+
 10. Write a class Test which has an std::string member. Now use an std::unordered_map<Test, int>. What do I need to write addtionally, why and how, in order for the unordered_map to work fine?
+
+We need to specialize the std::hash method to act as a key for the map.
+
+template<> 
+struct std::hash<Test> 
+{
+	size_t operator()(const Test& t) 
+	{
+		return std::hash<string>()(t.key);
+	}
+}
+
+// 	varianta corecta sus, varianta initiala (fara sa verific sintaxa std::hash-ului) jos
+//	std::hash<Test>(const Test& t)
+//	{
+//		return std::hash<std::string>(t.key);
+//	}
+
+class Test 
+{	
+private:
+	std::string key{};
+}
+
+int main()
+{
+	std::unordered_map<Test, int> myMap{};
+}
+
 
 11. Write a C++ function that removes all odd numbers from a std::vector<int>. Write two variants of it, one object oriented and one functional.
 
+std::vector<int> list{1,2,3,4,5,6,7};
+
+// object-oriented
+for (auto i = list.begin(); i != list.end(); i++)
+{
+	if (*i % 2 == 0)
+	{
+		i--;
+	}
+	else 
+	{
+		i = list.erase(i);
+	}
+}
+
+// functional
+std::transform(list.begin(), list.end(), list.begin, [&](int i){
+	if (i % 2 == 1) 
+	{
+		list.erase(i);
+	}
+});
+
+// sau
+std::erase_if(list, [&](int i){
+	return i % 2 == 1;
+})
+
+
 12. For storing a highly dynamic collection of elements that we rarely iterate, would you use an array or a linked list? Why? What if the collection is still being fairly dynamic (inserting or removing pretty often) but iterated heavily? What if you need random access for this collection?
+
+I would suggest using a linked list, because iterating through it is not important, but insertion is done in O(1).
+If we heavily iterate through the collection, a linked list would still be preferred, because of the big difference between inserting/removing time complexity resulted from the vector having to shift all the elements for each operation. 
+If we need random access, a vector is the go-to data structure.
+
 
 13. In an application you're designing you have a list of more than 1 million items which you rarely modify but in which you look up very frequently. What type of data structure would you use for storing these items? Feel free to treat more than one case by making your own assumptions about further needs.
 
+I would use an unordered map, because access time is O(1) and because we rarely modify it, we will not have too many cases of collision.
+In case we need to store them based, for instance, on a category, an unordered multimap would be the optimal solution, because for each key, it stores an array of objects. 
+
+
 14. What is CppRestSdk? Write a snippet using CppRestSdk that performs a google search and outputs the result in a file that I can open with Safari.
 
+CppRestSdk is a framework developed by Microsoft, for easier-to-use networking operations. Its documentation is not very beginner-friendly, but using the higher-level classes and functions that the framework provides is usually better and simpler than using your own pure c++ code.
+
+std::fstream file{"wiki.html"};
+web::http::client::http_client client{"https://www.google.com/"};
+web::http::uri_builder builder{"/search"};
+builder.append_query("q", "cluj wikipedia");
+client.request(web::http::methods::GET, builder.to_string())
+	  .then([&](const web::http::http_response& response){
+	  	  return response.extract_string();
+	  })
+	  .then([&](const web::http::string& body){
+	  	  file << body;
+	  	  file.close();
+	  })
+	  .wait();
+
+
+
 15. What is the difference between `make` and `CMake`? Which one did we use in the `toolproject`?
+We used make when we had one or two files in the project, but CMake later helped us create the whole file system needed for the application to be ran.
+The main difference is that when using make, we had to explicitly write what files have to be processed and how; when using CMake, we only had to specify the path to the files.
+
