@@ -26,19 +26,15 @@ public:
 	{
 		
 	}
-									// pentru cazul "MutableRef<int>{5} has to fail"
-	// MutableRef(T value)			// am incercat si varianta cu verificarea daca e rvalue
-	// : mRef{}						// dar in situatia asta, programul compileaza, pentru ca eroarea se arunca la runtime
-	// {							
-	// 	if (is_rvalue(value)) 
-	// 	{
-	// 		mRef = &value;
-	// 	}
-	// 	else
-	// 	{
-	// 		throw std::runtime_error("Could not create a MutableRef using a rvalue");
-	// 	}
-	// }
+	
+	template <typename U>								// pentru cazul "MutableRef<int>{5} has to fail"
+	MutableRef(U&& value)								// am incercat si varianta cu verificarea daca e rvalue
+	: mRef{}											// dar in situatia asta, programul compileaza, pentru ca eroarea se arunca la runtime
+	{							
+		// throw std::runtime_error("Could not create a MutableRef using a rvalue");
+		static_assert(!std::is_rvalue_reference_v<decltype(value)>, "Cannot assign a rvalue to MutableRef");
+		mRef = &value;
+	}
 
 	// MutableRef(const MutableRef<T>& ref)
 	// : mRef{ref}
@@ -79,16 +75,6 @@ public:
 		throw std::runtime_error("Invalid access to uninitialized MutableRef");
 	}
 
-	// T operator=(const T& a) const
-	// {
-	// 	*mRef = a;
-	// }
-
-	// T operator=(const int& a) const
-	// {
-
-	// }
-
 	void operator++() const
 	{
 		(*mRef)++;
@@ -96,7 +82,7 @@ public:
 
 	operator int() const
 	{
-		return (int)mRef;
+		return static_cast<int>(mRef);
 	}
 
 private:
@@ -151,7 +137,7 @@ void doSomethingElse(const MutableRefT& ref)
 	// to call it on a const object. So if getStoredReference is const, it cannot return something as reference unless the reference is const as well.
 	// so wrapping up, I'm trying to get a const reference obtained from "ref" and bind it to a non-const reference int& z. So the code cannot compile.
 	//
-    // int& z = ref;
+    // int& z = *ref;
 }
 
 int main()
@@ -173,8 +159,8 @@ int main()
 	std::this_thread::sleep_for(1s);
 	std::cout << doSomething<int>() << std::endl;
 
-    // int x{};
-	// doSomethingElse(MutableRef<int>{x});
+    int x{};
+	doSomethingElse(MutableRef<int>{x});
 
 	return 0;
 

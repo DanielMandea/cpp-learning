@@ -126,11 +126,19 @@ public:
 };
 
 template <typename T>
-void foo(const List<T>& list)
+void foo(const List<T>& list)		// doesn't really work, i didn't find another way to print the element based on the type 
 {
 	list.applyToAll([](auto& element)
 	{
-		std::cout << element << ", ";
+		if (static_cast<std::pair<>>(element) != nullptr)
+		{
+			std::cout << element.second << ", ";
+		}
+		// if (static_cast<...>(element) != nullptr)	
+		else 		//
+		{
+			std::cout << element << ", ";
+		}
 	});
 }
 
@@ -179,6 +187,7 @@ int main()
 	myList2.insert(std::string{"alex"});
 	myList2.insert(std::string{"alex2"});
 
+	// foo(myList); 
 	foo(myList2);
 	foo2(myList2);
 	foo(myList2);

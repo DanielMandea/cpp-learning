@@ -1,3 +1,4 @@
+#include <cstdarg>
 #include <iostream>
 
 template <typename T>
@@ -17,21 +18,6 @@ public:
 		testCount++;
 	}
 
-	static UniquePtr<T> Move(UniquePtr<T>& a)		// Move se comporta ca std::move
-	{
-		testCount++;
-		UniquePtr<T> temp{a.mPointedValue};
-		testCount--;
-		a.mPointedValue = nullptr;
-		return temp;
-	}
-
-	static UniquePtr<T> Make(const T& value)		// Make e echivalentul lui std::make_unique
-	{
-		testCount++;
-		return UniquePtr<T>{value};
-	}
-
 	UniquePtr(T* ptr)
 	: mPointedValue{ptr}
 	{
@@ -45,9 +31,22 @@ public:
 		a.mPointedValue = nullptr;
 	}
 
+	static UniquePtr<T> Move(UniquePtr<T>& a)		// Move se comporta ca std::move
+	{
+		UniquePtr<T> temp{a.mPointedValue};
+		a.mPointedValue = nullptr;
+		return temp;
+	}
+
+	template <typename... Ts>
+	static UniquePtr<T> Make(Ts... args)			// Make e echivalentul lui std::make_unique
+	{
+		return UniquePtr<T>(new T{args...});
+	}
+
+
 	T& release()
 	{
-		testCount--;
 		T& ret = *mPointedValue;
 		mPointedValue = nullptr;
 		return ret;
@@ -102,7 +101,7 @@ public:
 		return testCount;
 	}
 
-	UniquePtr<T> operator=(UniquePtr<T> a)
+	UniquePtr<T> operator=(UniquePtr<T>& a)
 	{
 		UniquePtr<T> temp = UniquePtr<T>::Move(a);
 		return temp;
@@ -118,23 +117,35 @@ class X
 {
 public:
 	X()
-	: member{}
+	: member1{},
+	  member2{},
+	  member3{}
 	{
 
 	}
+
+	X(int a, int b, std::string c)
+	: member1{a},
+	  member2{b},
+	  member3{c}
+	{
+
+	}  
 
 	void foo()
 	{
-		member = 10;
+		member1 = 10;
 	}
 
-	int get()
+	void print()
 	{
-		return member;
+		std::cout << member1 << ", " << member2 << ", " << member3 << std::endl;
 	}
 
 private:
-	int member;
+	int member1;
+	int member2;
+	std::string member3;
 };
 
 
@@ -200,11 +211,29 @@ void testUniquePtr_Move()
 
 	if (count == 2)
 	{
-		std::cout << "test passed\n";
+		std::cout << "move test passed\n";
 	}
 	else 
 	{
-		std::cout << "test failed, " << count << " instances created\n";
+		std::cout << "move test failed, " << count << " instances created\n";
+	}
+}
+
+void testUniquePtr_Make()
+{
+	int initialCount = UniquePtr<X>::getCount();
+	UniquePtr<X> ptrToX = UniquePtr<X>::Make(1, 2, "name");
+	int count = UniquePtr<X>::getCount() - initialCount;
+
+	ptrToX->print();
+
+	if (count == 1)
+	{
+		std::cout << "make test passed\n";
+	}
+	else 
+	{
+		std::cout << "make test failed, " << count << " instances created\n";
 	}
 }
 
@@ -290,6 +319,7 @@ int main()
 
 
 	testUniquePtr_Move();
+	testUniquePtr_Make();
 	// + UNIT TEST Make construieste o singura instanta de T
 	// sa pice in cazul in care se apeleaza de mai multe ori constructorul lui T (sau celelalte, ex copy)
 
