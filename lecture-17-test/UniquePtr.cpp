@@ -13,7 +13,7 @@ public:
 
 	}
 	
-	UniquePtr(T value)
+	UniquePtr(const T& value)
 	: mPtr{new T{value}}
 	{
 	    
@@ -30,6 +30,11 @@ public:
     // {
         
     // }
+    template <typename... Args> 										
+	static UniquePtr<T> makeUnique(Args&& ...args)
+	{
+		return UniquePtr<T>(new T(std::forward<Args>(args)...));		// std::forward = forwards as lvalue or as rvalue, depending on Args
+	}
 
     UniquePtr(std::nullptr_t)
     : mPtr{nullptr}
@@ -48,14 +53,6 @@ public:
 	~UniquePtr()
 	{
 		delete mPtr;
-	}
-	
-	static UniquePtr<T> makeUnique(UniquePtr<T>& a)
-	{
-		UniquePtr<T> ret{a.mPtr};
- 		delete a.mPtr;
-		a.mPtr = nullptr;
-		return ret;
 	}
 	
 	//move constructor 
@@ -80,11 +77,12 @@ public:
 		return mPtr;
 	}
 
+	//dangling reference
 	T& release()
 	{
 		T& ret = *mPtr;
 		mPtr = nullptr;
-		return ret;
+		return ret; 
 	}
 	
 	T* get()
@@ -139,15 +137,45 @@ private:
 class A 
 { 
 public: 
+
+	A()
+	: mAmember1{},
+	  mAmember2{},
+	  mAmember3{}
+
+	{
+
+	}
+
+	A(int a, int b, std::string c)
+	: mAmember1{a},
+	  mAmember2{b},
+	  mAmember3{c}
+	{
+
+	}
     void show() 
     { 
-        std::cout << "A::show() \n"; 
+        std::cout << "A::show() \n" << mAmember1<< " , "<<mAmember2 <<" , "<<mAmember3 <<"\n"; 
     }
+private:
+	int mAmember1;
+	int mAmember2;
+	std::string mAmember3;
 };
+
+void testForMake()
+{
+	UniquePtr<A> ptr = UniquePtr<A>::makeUnique<A>(A(10,12, "String test"));
+	ptr->show();
+
+}
 
 
 int main()
 {
+	// testForMake();
+
 	// 	UniquePtr<int> p{new int{10}};
 
 	// UniquePtr<int> p1; //starts as nullptr
@@ -162,38 +190,37 @@ int main()
 	//  (*ptrA1).show();
 
 
-	UniquePtr<int> ptrA{11};
+	// UniquePtr<int> ptrA{11};
 	// UniquePtr<int> ptrA2{12};
 
 	// auto ptr2 = UniquePtr<int>{};
-	std::cout<<  "ptr2 is " << (ptr2.isNull() ? "null\n" : "not-null => " +std::to_string(*ptr2) +"\n");
+	// std::cout<<  "ptr2 is " << (ptr2.isNull() ? "null\n" : "not-null => " +std::to_string(*ptr2) +"\n");
 
 
-	// Test<int> t{ptrA};
+	// Test t{ptrA};
 	// std::cout<< t.getTest(); //prints 11 
 
-
-    UniquePtr<int> ptrA1 = UniquePtr<int>::makeUnique(ptrA);
-    
+  
+    UniquePtr<int> ptrA = UniquePtr<int>::makeUnique<>(10);
     std::cout<<  "ptrA is " << (ptrA.isNull() ? "null\n" : "not-null => " +std::to_string(*ptrA) +"\n");
 
-	// (1): nu pot face assignarea de mai jos
+	(1): nu pot face assignarea de mai jos
 	auto ptrA5 = ptrA;
 
- 	// (2): trebuie sa mearga
+ 	(2): trebuie sa mearga
 
-	auto ptrB = std::move(ptrA2);
+	auto ptrB = std::move(ptrA);
 	std::cout<<  "ptrB is " << (ptrB.isNull() ? "null\n" : "not-null => " +std::to_string(*ptrB) +"\n");
 
  	// (3): release 
 	ptrA = nullptr;
 
- 	//(4): sa fie bool
-	assert(ptrA1 == nullptr);
+ 	// (4): sa fie bool
+	assert(ptrA == nullptr);
     std::cout << "Execution continues past the first assert\n";
 
- 	//(5): sa functioneze mai jos
- 	assert(!ptrA1);
+ 	// (5): sa functioneze mai jos
+ 	assert(!ptrA);
     std::cout << "Execution continues past the second assert\n";
 
  	//(6):
@@ -205,9 +232,9 @@ int main()
 	return 0;
 
 	// Questions:
-	//
+	
 	// 1. Write a template class UniquePtr that behaves as much as a std::unique_ptr as possible. Do not try to be perfect, but support the basics at least.
-	//
+	
 	// 2. Write a class Test that takes and saves as member a UniquePtr<int>.
 }
 

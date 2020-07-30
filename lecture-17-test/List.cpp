@@ -16,7 +16,7 @@ template <typename T>
 class LinkedList
 {
 public:
-	LinkedList<T>() 
+	LinkedList() 
 	:mFirst{nullptr},
 	 mLast{nullptr}
 	{
@@ -58,16 +58,29 @@ public:
 	
 	void applyToAll(const std::function<void(std::pair<std::string, std::size_t>&)>& function)
 	{
-		if (mFirst != mLast)
+		 if (mFirst)
+		 {
+		 	Node<T>* node = mFirst;
+		 	do 
+		 	{
+		 		function(node->data);
+		 		node = node->next;
+
+		 	}while (node);
+		 }
+
+		// varianta cu while
+      		Node<T>* node = mFirst;
+		 	while (node)
+		 	{
+		 		function(node->data);
+		 		node = node->next;
+		 	}
+
+       // varianta cu for 
+		for (Node<T>* node = mFirst; node ; node = node->next)
 		{
-			Node<T>* node = mFirst;
-
-			do 
-			{
-				function(node->data);
-				node = node->next;
-
-			}while (node != nullptr);
+			function(node -> data);
 		}
 	}
 
@@ -108,9 +121,7 @@ int main()
 
 	myList.insert(std::make_pair("dog", 0));
 	myList.insert(std::make_pair("cpp-training-test", 0));
-	
-	std::pair<std::string, std::size_t> el1 = std::make_pair("dog", 0);
-	std::pair<std::string, std::size_t> el2 = std::make_pair("cpp-training-test", 0);
+    myList.insert(std::make_pair("cpp-training-test", 0));
 
 // 	myList.applyToAll([](auto& element)
 // 	{

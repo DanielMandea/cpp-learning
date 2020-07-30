@@ -18,14 +18,8 @@ public:
 
 	}
 
-	// MutableRef(T& val)
-	// : mRef{}
-	// {
-	// 	*mRef = val;
-	// }
-
-	MutableRef(const MutableRef<T>& ref)
-	: mRef{ref}
+	MutableRef(T& ref)
+	: mRef{&ref}
 	{
 
 	}
