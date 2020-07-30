@@ -25,22 +25,22 @@ Server::Server(std::unique_ptr<StorageEngineIntf<Entity>> storageEngine)
                                                                          std::placeholders::_1)
                                                            },
                                                            {
-                                                                   web::http::methods::GET,
-                                                                   std::bind(&Server::handleGetRequest,
-                                                                             this,
-                                                                             std::placeholders::_1)
+                                                               web::http::methods::GET,
+                                                               std::bind(&Server::handleGetRequest,
+                                                                         this,
+                                                                         std::placeholders::_1)
                                                            },
                                                            {
-                                                                   web::http::methods::PUT,
-                                                                   std::bind(&Server::handlePutRequest,
-                                                                             this,
-                                                                             std::placeholders::_1)
+                                                               web::http::methods::PUT,
+                                                               std::bind(&Server::handlePutRequest,
+                                                                         this,
+                                                                         std::placeholders::_1)
                                                            },
                                                            {
-                                                                   web::http::methods::DEL,
-                                                                   std::bind(&Server::handleDeleteRequest,
-                                                                             this,
-                                                                             std::placeholders::_1)
+                                                               web::http::methods::DEL,
+                                                               std::bind(&Server::handleDeleteRequest,
+                                                                         this,
+                                                                         std::placeholders::_1)
                                                            }
                                                        })
     {
@@ -65,8 +65,6 @@ void Server::handlePostRequest(const web::http::http_request& request)
         std::string name{};
         std::string email{};
 
-        std::cout << request.to_string() << "gata\n\n\n";
-
         if ((pathList.size() == 1 && pathList[0] != "users") || pathList.size() > 1) {
             request.reply(web::http::status_codes::BadRequest);
         }
@@ -77,12 +75,15 @@ void Server::handlePostRequest(const web::http::http_request& request)
             name = json_value.as_object().at("name").as_string();
             email = json_value.as_object().at("email").as_string();
 
+            std::cout << "create\n";
+            std::cout << "name: " << name << "; email: " << email << std::endl;
+
             Entity entity{name, email};
             mStorageEngine->create(entity);
             std::string newLocation = "/users/" + std::to_string(entity.computeStorageKey());
             auto headers = request.headers();
             headers["Location"] = newLocation;
-            std::cout << "redirect location:" << headers["Location"] << "\n";
+            std::cout << "redirect location: " << headers["Location"] << "\n";
             request.reply(web::http::status_codes::Created);
         }
     }
@@ -104,6 +105,8 @@ void Server::handleGetRequest(const web::http::http_request& request)
     try {
         auto pathList = web::http::uri::split_path(request.request_uri().path());
         web::json::value json_reply{};
+
+        std::cout << "read\n";
 
         if (pathList.size() > 2) {
             request.reply(web::http::status_codes::BadRequest);
@@ -156,6 +159,8 @@ void Server::handlePutRequest(const web::http::http_request& request)
         std::string email{};
         web::json::value json_value{};
 
+        std::cout << "update\n";
+
         if (pathList.size() == 1) {
             request.reply(web::http::status_codes::MethodNotAllowed);
         }
@@ -170,6 +175,8 @@ void Server::handlePutRequest(const web::http::http_request& request)
             json_value = task.get();
             name = json_value.as_object().at("name").as_string();
             email = json_value.as_object().at("email").as_string();
+
+            std::cout << "name: " << name << "; email: " << email << std::endl;
 
             int key = stoi(pathList[1]);
 
@@ -196,6 +203,8 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
     try
     {
         auto pathList = web::http::uri::split_path(request.request_uri().path());
+
+        std::cout << "delete\n";
 
         if (pathList.size() > 2) {
             request.reply(web::http::status_codes::BadRequest);

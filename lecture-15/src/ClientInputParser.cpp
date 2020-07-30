@@ -28,21 +28,32 @@ namespace
 	{
 		try
 		{
-			std::ifstream file("/resources/client_operations.json");
+		    // "/resources/client_operations.json"
+		    // "/Users/dragosioanfechete/Desktop/cpp-learning/lecture-15/build/bin/resources/client_operations.json"
+			std::ifstream file("/Users/dragosioanfechete/Desktop/cpp-learning/lecture-15/resources/client_operations.json");
 			std::string s;
 			web::json::value v;
-			if(file)
+			if(file.is_open())
 			{
-				file >> s;
+			    while (!file.eof())
+                {
+			        std::string aux{};
+                    file >> aux;
+                    s += aux;
+                }
 				file.close();
 				v = web::json::value::parse(s);
 			}
 			return v;
 		}
-		catch(web::json::json_exception exception)
+		catch (const web::json::json_exception& exception)
 		{
-			std::cout << "json parsing exception: " << exception.what();
+			std::cout << "json parsing exception: " << exception.what() << std::endl;
 		}
+		catch (const std::exception& exception)
+        {
+		    std::cout << "std exception: " << exception.what();
+        }
 		return web::json::value{};
 	}
 
@@ -106,22 +117,21 @@ std::vector<std::unique_ptr<Client>> ClientInputParser::buildClients() const
  	try
  	{
  		web::json::value v = fileToJson();
- 		auto array = v.as_object().at("batches").as_array();
+ 		const auto& array = v["batches"].as_array();
  		if (mNumberOfClients != array.size())
  		{
  			throw std::runtime_error{"Number of clients not matching the batch size"};
  		}
 
-// 		for(auto it = array.cbegin(); it != array.cend(); ++it)
-// 		{
-// 			auto batches = it;
-            std::unique_ptr<Client> client = processBatches(array);
+ 		for(const auto& it : array)
+ 		{
+            std::unique_ptr<Client> client = processBatches(it.as_array());
  			clientList.push_back(std::move(client));
-// 		}
+ 		}
  	}
- 	catch(web::json::json_exception exception)
+ 	catch(const web::json::json_exception& exception)
  	{
- 		std::cout << "error parsing json: " << exception.what();
+ 		std::cout << "error parsing json: " << exception.what() << std::endl;
  	}
 
 	return clientList;
