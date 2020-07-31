@@ -57,7 +57,7 @@ namespace
 		return web::json::value{};
 	}
 
-	std::unique_ptr<Client> processBatches(web::json::array batch) 
+	std::unique_ptr<Client> processBatches(const web::json::array& batch)
 	{
 		std::unique_ptr<Client> client = std::make_unique<Client>();
 		for(auto it2 = batch.cbegin(); it2 != batch.cend(); ++it2)

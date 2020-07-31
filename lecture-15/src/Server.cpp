@@ -66,7 +66,9 @@ void Server::handlePostRequest(const web::http::http_request& request)
         std::string email{};
 
         if ((pathList.size() == 1 && pathList[0] != "users") || pathList.size() > 1) {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
         else {
             auto task = request.extract_json();
@@ -74,9 +76,6 @@ void Server::handlePostRequest(const web::http::http_request& request)
             json_value = task.get();
             name = json_value.as_object().at("name").as_string();
             email = json_value.as_object().at("email").as_string();
-
-            std::cout << "create\n";
-            std::cout << "name: " << name << "; email: " << email << std::endl;
 
             Entity entity{name, email};
             mStorageEngine->create(entity);
@@ -89,7 +88,9 @@ void Server::handlePostRequest(const web::http::http_request& request)
     }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }
 
@@ -109,17 +110,23 @@ void Server::handleGetRequest(const web::http::http_request& request)
         std::cout << "read\n";
 
         if (pathList.size() > 2) {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
         else if (pathList.size() == 2) {
             int id = stoi(pathList[1]);
             auto entity = mStorageEngine->read(id);
             json_reply["user"]["name"] = web::json::value::string(entity.getMName());
             json_reply["user"]["email"] = web::json::value::string(entity.getMEmail());
-            if (!entity.getMName().empty()) {     // check if the read operation has been successfully completed
+            if (!entity.getMName().empty()) {
+                auto json_string = json_reply.serialize();
+                std::cout << json_string << std::endl;
                 request.reply(web::http::status_codes::OK, json_reply);
             } else {
-                request.reply(web::http::status_codes::NotFound);
+                web::json::value json_error{};
+                json_error["error_msg"] = web::json::value::parse("entity with id: " + std::to_string(id) + " was not found");
+                request.reply(web::http::status_codes::NotFound, json_error);
             }
         }
         else if (pathList.size() == 1) {
@@ -131,16 +138,22 @@ void Server::handleGetRequest(const web::http::http_request& request)
                 json_reply[user]["name"] = web::json::value::string(entity.getMName());
                 json_reply[user]["email"] = web::json::value::string(entity.getMEmail());
             }
-            if (entities.size() > 0) {
-                request.reply(web::http::status_codes::OK, json_reply);
-            } else {
-                request.reply(web::http::status_codes::NotFound);
-            }
+
+            auto json_string = json_reply.serialize();
+            request.reply(web::http::status_codes::OK, json_reply);
         }
+    }
+    catch (const web::http::http_exception& e)
+    {
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }
 
@@ -162,11 +175,15 @@ void Server::handlePutRequest(const web::http::http_request& request)
         std::cout << "update\n";
 
         if (pathList.size() == 1) {
-            request.reply(web::http::status_codes::MethodNotAllowed);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("update is not allowed with zero parameters");
+            request.reply(web::http::status_codes::MethodNotAllowed, json_error);
         }
         if (pathList.size() > 2)
         {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
         else
         {
@@ -175,8 +192,6 @@ void Server::handlePutRequest(const web::http::http_request& request)
             json_value = task.get();
             name = json_value.as_object().at("name").as_string();
             email = json_value.as_object().at("email").as_string();
-
-            std::cout << "name: " << name << "; email: " << email << std::endl;
 
             int key = stoi(pathList[1]);
 
@@ -191,7 +206,9 @@ void Server::handlePutRequest(const web::http::http_request& request)
     }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }
 
@@ -207,7 +224,9 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
         std::cout << "delete\n";
 
         if (pathList.size() > 2) {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
         else if (pathList.size() == 2){
             int id = stoi(pathList[1]);
@@ -217,6 +236,8 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
     }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }

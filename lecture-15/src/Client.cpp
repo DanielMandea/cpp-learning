@@ -1,6 +1,7 @@
 #include "Client.h"
 #include "ClientAction.h"
 #include "Entity.h"
+#include "UnexpectedStatusCodeException.h"
 
 #include <cpprest/http_client.h>
 
@@ -67,9 +68,20 @@ void Client::executeActions()
 		{
 			const auto& action = mActions.front();
 
-			doAction(*action);
+			try
+            {
+			    doAction(*action);
+            }
+			catch (const UnexpectedStatusCodeException& e)
+            {
+                std::cout << "for action " << static_cast<int>(action->getOperation()) << ", received error from http server: " << e.what() << std::endl;
+            }
+			catch (const std::exception& e)
+            {
+			    std::cout << "for action " << static_cast<int>(action->getOperation()) << ", std::exception message: " << e.what() << std::endl;
+            }
 
-			mActions.pop();
+            mActions.pop();
 		}
 	}};
 
@@ -99,13 +111,40 @@ void Client::doAction(const ClientAction& action) const
         request.set_request_uri(uri);
 
     }
+    auto json_string = jvalue.serialize();
+    std::cout << json_string << std::endl;
     request.set_body(jvalue);
 
 	web::http::client::http_client client{HOSTNAME};
 	client.request(request)
 	      .then([](const web::http::http_response& response)
 		        {
-				    std::cout << "Request executed successfully, response is: " << response.to_string() << "\n\n";
+	                if (response.status_code() == web::http::status_codes::OK)
+                    {
+	                    std::cout << "Request executed successfully, response is: " << response.to_string() << "\n\n";
+                    }
+	                else if (response.status_code() == web::http::status_codes::Created)
+                    {
+	                    const auto& location = response.headers().find("Location");
+	                    if (location != response.headers().end())
+                        {
+
+                        }
+                    }
+	                else
+                    {
+                        try
+                        {
+                            auto json_response = response.extract_json().get();
+                            throw UnexpectedStatusCodeException(json_response["error_msg"].as_string());
+                        }
+                        catch (const web::json::json_exception& ex)
+                        {
+                            throw UnexpectedStatusCodeException("received status code: " +
+                                                                std::to_string(response.status_code()) +
+                                                                ", but could not find json key \"error_msg\" in body");
+                        }
+                    }
 			    })
 	      .wait();
 }

@@ -59,6 +59,7 @@ const EntityT& InMemoryStorageEngine<EntityT>::read(const StorageKey& key) const
     {
         return itr->second;
     }
+//    return EntityT{"name", "email"};
     throw std::runtime_error{"Key" + std::to_string(key) + " not found in the map"};
 }
 
