@@ -6,10 +6,6 @@
 				"operation": "create",
 				"name": "John Doe",
 				"email": "john.doe@gmail.com"
-			},
-			{
-				"operation": "read",
-				"name": "John Doe"
 			}
 		]
 	]

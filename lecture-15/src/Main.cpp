@@ -24,10 +24,6 @@ int main(int argc, char** argv)
 	{
 		std::cout << "Received exception: " << ex.what();
 	}
-	catch (...)
-	{
-		std::cout << "got ex\n\n\n";
-	}
 	
 	return 0;
 }
