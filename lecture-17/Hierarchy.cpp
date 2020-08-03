@@ -72,7 +72,7 @@ int main()
 
     std::cout << "\n\n\n";
 
-    delete[] inst0;
+    delete inst0;
     delete inst1; 
     delete inst2; 
     delete inst3; 
@@ -82,27 +82,6 @@ int main()
     // Questions:
     //
     // 1. What is the output of the program?
-    //  
-    //  B::f1() value = 1
-    //  B::f2()
-    //  A::f3()
-    //  B::f1() value = 1
-    //  B::f2()
-    //  A::f3()
-    //  B::f1() value = 500
-    //  B::f2()
-    //  B::f3()
-    //  A::f1() value = 5
-    //  A::f2()
-    //  A::f3()
-    //  ~A()  10 times
-    //  ~A()
-    //  ~B()
-    //  ~A()
-    //
     //
     // 2. What potential issues can you find with this implementation? Propose any kind of changes that would improve it.
-    // Firstly, the size of the array must be known at compile time, for instance by using a beforehand-initialized variable
-    // Secondly, we have to delete the whole array pointed by inst0, using delete[] inst0;
-
 }

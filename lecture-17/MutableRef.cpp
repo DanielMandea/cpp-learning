@@ -1,94 +1,11 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include <stdexcept>
 #include <type_traits>
 
 // this is for the "1s" things to actually mean 1 second
 //
 using namespace std::chrono;
-
-namespace
-{
-	template <typename T>
-	constexpr bool is_rvalue(T&&)
-	{
-		return std::is_rvalue_reference<T>{};
-	}
-}
-
-template <typename T>
-class MutableRef
-{
-public:
-	MutableRef(T& value)
-	: mRef{&value}
-	{
-		
-	}
-	
-	template <typename U>								// pentru cazul "MutableRef<int>{5} has to fail"
-	MutableRef(U&& value)								// am incercat si varianta cu verificarea daca e rvalue
-	: mRef{}											// dar in situatia asta, programul compileaza, pentru ca eroarea se arunca la runtime
-	{							
-		// throw std::runtime_error("Could not create a MutableRef using a rvalue");
-		static_assert(!std::is_rvalue_reference_v<decltype(value)>, "Cannot assign a rvalue to MutableRef");
-		mRef = &value;
-	}
-
-	// MutableRef(const MutableRef<T>& ref)
-	// : mRef{ref}
-	// {
-
-	// }
-
-	MutableRef(const MutableRef& ref)
-	{
-
-	}
-
-	MutableRef()
-	: mRef{}
-	{
-
-	}
-
-	// lvalue reference, if constexpr
-
-	T& operator*()
-	{	
-		if(mRef)
-		{
-			return *mRef;
-		}
-
-		throw std::runtime_error("Invalid access to uninitialized MutableRef");
-	}
-
-	const T& operator*() const
-	{	
-		if(mRef)
-		{
-			return *mRef;
-		}
-
-		throw std::runtime_error("Invalid access to uninitialized MutableRef");
-	}
-
-	void operator++() const
-	{
-		(*mRef)++;
-	}
-
-	operator int() const
-	{
-		return static_cast<int>(mRef);
-	}
-
-private:
-	T* mRef;
-};
-
 
 template<typename T>
 T& doSomething()
@@ -117,13 +34,13 @@ T& doSomething()
 		}
 	}
 
-	return *ref;
+	return ref;
 }
 
 template<typename MutableRefT>
 void doSomethingElse(const MutableRefT& ref)
 {
-	const int& x = *ref;
+	const int& x = ref;
 	const int& y = x;
     
     // just to get rid of the unused variable warnings
@@ -137,7 +54,7 @@ void doSomethingElse(const MutableRefT& ref)
 	// to call it on a const object. So if getStoredReference is const, it cannot return something as reference unless the reference is const as well.
 	// so wrapping up, I'm trying to get a const reference obtained from "ref" and bind it to a non-const reference int& z. So the code cannot compile.
 	//
-    // int& z = *ref;
+    // int& z = ref;
 }
 
 int main()
