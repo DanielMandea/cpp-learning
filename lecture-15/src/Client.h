@@ -16,6 +16,4 @@ public:
 
 private:
 	std::queue<std::unique_ptr<ClientAction>> mActions;
-
-	void doAction(const ClientAction& action) const;
 };
