@@ -80,10 +80,11 @@ void Server::handlePostRequest(const web::http::http_request& request)
             Entity entity{name, email};
             mStorageEngine->create(entity);
             std::string newLocation = "/users/" + std::to_string(entity.computeStorageKey());
-            auto headers = request.headers();
+            web::http::http_response response{};
+            auto& headers = response.headers();
             headers["Location"] = newLocation;
-            std::cout << "redirect location: " << headers["Location"] << "\n";
-            request.reply(web::http::status_codes::Created);
+            response.set_status_code(web::http::status_codes::Created);
+            request.reply(response);
         }
     }
     catch (const std::exception& e)
@@ -107,7 +108,7 @@ void Server::handleGetRequest(const web::http::http_request& request)
         auto pathList = web::http::uri::split_path(request.request_uri().path());
         web::json::value json_reply{};
 
-        std::cout << "read\n";
+        std::cout << "S: Received request at `" << request.request_uri().path() << "`, method = GET\n";
 
         if (pathList.size() > 2) {
             web::json::value json_error{};
@@ -121,11 +122,14 @@ void Server::handleGetRequest(const web::http::http_request& request)
             json_reply["user"]["email"] = web::json::value::string(entity.getMEmail());
             if (!entity.getMName().empty()) {
                 auto json_string = json_reply.serialize();
-                std::cout << json_string << std::endl;
+                std::cout << "S: Sending reply for earlier request with body=" << json_string << std::endl;
                 request.reply(web::http::status_codes::OK, json_reply);
             } else {
                 web::json::value json_error{};
-                json_error["error_msg"] = web::json::value::parse("entity with id: " + std::to_string(id) + " was not found");
+                json_error["error_msg"] = web::json::value::parse("entity with id: " + std::to_string(id)
+                                                                                           + " was not found");
+                std::cout << "S: Sending reply for earlier request with status code `Not Found`, body="
+                          << json_reply.serialize() << std::endl;
                 request.reply(web::http::status_codes::NotFound, json_error);
             }
         }

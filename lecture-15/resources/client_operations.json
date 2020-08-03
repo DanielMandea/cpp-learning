@@ -10,56 +10,6 @@
 			{
 				"operation": "read",
 				"name": "John Doe"
-			},
-			{
-				"operation": "update",
-				"name": "John Doe",
-				"updated_name": "Jane Doe"
-			},
-			{
-				"operation": "delete",
-				"name": "Jane Doe"
-			},
-			{
-				"operation": "create",
-				"name": "Jane Doe",
-				"email": "jane.doe@gmail.com"
-			}
-		],
-		[
-			{
-				"operation": "read",
-				"name": "Ion Popescu"
-			},
-			{
-				"operation": "update",
-				"name": "Ion Popescu",
-				"updated_name": "Ion Popovici"
-			},
-			{
-				"operation": "delete",
-				"name": "Ion Popovici"
-			},
-			{
-				"operation": "create",
-				"name": "Ion Popescu",
-				"email": "ion.popescu@gmail.com"
-			}
-		],
-		[
-			{
-				"operation": "create",
-				"name": "Gheorghe Ionescu",
-				"email": "gheorghe.ionescu@gmail.com"
-			},
-			{
-				"operation": "update",
-				"name": "Gheorghe Ionescu",
-				"updated_name": "Gheorghita Ionescu"
-			},
-			{
-				"operation": "delete",
-				"name": "Gheorghe Ionescu"
 			}
 		]
 	]

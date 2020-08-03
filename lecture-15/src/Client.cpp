@@ -1,6 +1,7 @@
 #include "Client.h"
 #include "ClientAction.h"
 #include "Entity.h"
+#include "LocationNotFoundException.h"
 #include "UnexpectedStatusCodeException.h"
 
 #include <cpprest/http_client.h>
@@ -45,6 +46,20 @@ namespace
 			}
 		}
 	}
+
+	web::http::http_request buildRequestWith(const web::http::method& method,
+	                                         const std::string& uri,
+	                                         const web::json::value& body = {})
+	{
+        web::http::http_request request{};
+        request.set_method(method);
+        request.set_request_uri(uri);
+        if (!body.is_null())
+        {
+            request.set_body(body);
+        }
+        return request;
+    }
 }
 
 Client::Client()
@@ -91,13 +106,29 @@ void Client::executeActions()
 void Client::doAction(const ClientAction& action) const
 {
 	auto [method, uri] = getEndpointByOperation(action.getOperation());
-
-    web::http::http_request request{};
-	request.set_method(method);
-	request.set_request_uri(uri);
 	web::json::value jvalue{};
 
 
+	if (ClientAction::Operation::READ == action.getOperation() ||
+	    ClientAction::Operation::DELETE == action.getOperation())
+    {
+        web::http::http_request request = buildRequestWith(method, uri);
+    }
+	else
+    {
+        auto name = web::json::value::string(action.getUserName());
+        jvalue["name"] = name;
+        auto email = web::json::value::string(action.getUserEmail());
+        jvalue["email"] = email;
+
+        if (ClientAction::Operation::UPDATE == action.getOperation()) {
+            Entity entity{name.as_string(), email.as_string()};
+            uri += "/" + std::to_string(entity.computeStorageKey());
+
+            jvalue["name"] = web::json::value::string(action.getUpdatedUserName());
+        }
+        web::http::http_request request = buildRequestWith(method, uri, jvalue);
+    }
 	auto name = web::json::value::string(action.getUserName());
     jvalue["name"] = name;
     auto email = web::json::value::string(action.getUserEmail());
@@ -108,27 +139,49 @@ void Client::doAction(const ClientAction& action) const
         uri += "/" + std::to_string(entity.computeStorageKey());
 
         jvalue["email"] = web::json::value::string(action.getUpdatedUserName());
-        request.set_request_uri(uri);
-
     }
-    auto json_string = jvalue.serialize();
-    std::cout << json_string << std::endl;
-    request.set_body(jvalue);
+    web::http::http_request request = buildRequestWith(method, uri, jvalue);
 
 	web::http::client::http_client client{HOSTNAME};
 	client.request(request)
-	      .then([](const web::http::http_response& response)
+	      .then([&client](const web::http::http_response& response)
 		        {
 	                if (response.status_code() == web::http::status_codes::OK)
                     {
-	                    std::cout << "Request executed successfully, response is: " << response.to_string() << "\n\n";
+                        auto json_response = response.extract_json().get();
+                        auto name = json_response["user"]["name"].as_string();
+                        auto email = json_response["user"]["email"].as_string();
+                        std::cout << "C: result with status OK of GET request is: name=" << name << ", email="
+                                  << email << std::endl;
                     }
 	                else if (response.status_code() == web::http::status_codes::Created)
                     {
-	                    const auto& location = response.headers().find("Location");
-	                    if (location != response.headers().end())
+                        const auto& locationItr = response.headers().find("Location");
+                        if (locationItr != response.headers().end())
                         {
+                            auto location = locationItr->second;
+                            web::http::http_request request{};
+                            request.set_method(web::http::methods::GET);
+                            request.set_request_uri(location);
+                            auto newResponse = client.request(request).get();
 
+                            if (newResponse.status_code() == web::http::status_codes::OK)
+                            {
+                                auto json_response = newResponse.extract_json().get();
+                                auto name = json_response["user"]["name"].as_string();
+                                auto email = json_response["user"]["email"].as_string();
+                                std::cout << "C: result with status OK of GET request at redirect location `"
+                                          << location << "` is: name=" << name << ", email=" << email << std::endl;
+
+                            }
+                            else
+                            {
+                                throw UnexpectedStatusCodeException("Redirect status code is not 200");
+                            }
+                        }
+                        else
+                        {
+                            throw LocationNotFoundException("redirection could not be completed");
                         }
                     }
 	                else

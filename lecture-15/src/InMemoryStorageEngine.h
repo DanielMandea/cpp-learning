@@ -46,21 +46,14 @@ typename InMemoryStorageEngine<EntityT>::StorageKey InMemoryStorageEngine<Entity
 template <typename EntityT>
 const EntityT& InMemoryStorageEngine<EntityT>::read(const StorageKey& key) const
 {
-
-//    auto range = mEntityMap.equal_range(key);
     std::vector<EntityT> entities{};
 
-
-//    std::transform(range.first, range.second, entities.begin(), [&](const std::pair<StorageKey, EntityT>& entity){
-//        return entity.second;
-//    });
     auto itr = mEntityMap.find(key);
     if (itr != mEntityMap.end())
     {
         return itr->second;
     }
-//    return EntityT{"name", "email"};
-    throw std::runtime_error{"Key" + std::to_string(key) + " not found in the map"};
+    throw std::runtime_error{"Key " + std::to_string(key) + " not found in the map"};
 }
 
 template <typename EntityT>

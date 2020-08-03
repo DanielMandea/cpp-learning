@@ -32,7 +32,7 @@ add_executable(toolproject
 		src/Main.cpp
 			   src/Server.cpp
                src/StorageEngineIntf.cpp
-        src/Entity.cpp src/Entity.h src/UnexpectedStatusCodeException.cpp src/UnexpectedStatusCodeException.h)
+        src/Entity.cpp src/Entity.h src/UnexpectedStatusCodeException.cpp src/UnexpectedStatusCodeException.h src/LocationNotFoundException.cpp src/LocationNotFoundException.h)
 
 target_include_directories(toolproject
                            PRIVATE
