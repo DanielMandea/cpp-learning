@@ -32,7 +32,8 @@
 *.app
 
 # Custom
-lecture-15/.idea
-lecture-15/build
-lecture-15/cmake-build-debug
+*.DS_Store
+.idea
+build
+cmake-build-debug
 
