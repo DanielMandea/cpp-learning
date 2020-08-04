@@ -20,10 +20,7 @@ int main(int argc, char** argv)
 
 		while (true);
 	}
-	catch (const web::http::http_exception& ex)
-	{
-		std::cout << "Received CPPRESTSDK exception: " << ex.what();
-	}
+
 	catch (const std::exception& ex)
 	{
 		std::cout << "Received exception: " << ex.what();

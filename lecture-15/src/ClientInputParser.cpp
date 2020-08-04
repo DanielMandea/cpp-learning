@@ -27,28 +27,37 @@ namespace
 	{
 		try
 		{
-			std::ifstream file("/resources/client_operations.json", std::ifstream::in);
+			std::ifstream file("/Users/artenieandrada/Desktop/cpp-training/cpp-learning/lecture-15/resources/client_operations.json");
 			std::string s;
 			web::json::value v;
-			if(file)
+			if(file.is_open())
 			{
-				file >> s;
-				file.close();
+			    while (!file.eof())
+                {
+			        std::string aux{};
+                    file >> aux;
+                    s += aux;
+                }
+                file.close();
 				v = web::json::value::parse(s);
 			}
 			return v;
 		}
-		catch(web::json::json_exception& exception)
+		catch(const web::json::json_exception& exception)
 		{
 			std::cout << "json parsing exception: " << exception.what();
 		}
+        catch (const std::exception& ex)
+        {
+            std::cout << "std exception: " << ex.what();
+        }
 		return web::json::value{};
 	}
 
-	std::unique_ptr<Client> processBatches(web::json::array batch)
+	std::unique_ptr<Client> processBatches(const web::json::array& batch)
 	{
 		std::unique_ptr<Client> client = std::make_unique<Client>();
-		for(auto it2 = batch.cbegin(); it2 != batch.cend(); ++it2)
+		for(auto it2 = batch.begin(); it2 != batch.end(); ++it2)
 		{
 			auto operation = it2->at(U("operation")).as_string();
 			auto name = it2->at(U("name")).as_string();
@@ -82,8 +91,8 @@ ClientInputParser::~ClientInputParser() = default;
 std::vector<std::unique_ptr<Client>> ClientInputParser::buildClients() const
 {
 	std::vector<std::unique_ptr<Client>> clientList{};
-//
-//
+
+//  TEST
 //	auto client = std::make_unique<Client>();
 //
 //	auto action = std::make_unique<ClientAction>("create", "My User Name");
@@ -107,19 +116,19 @@ std::vector<std::unique_ptr<Client>> ClientInputParser::buildClients() const
  	try
  	{
  		web::json::value v = fileToJson();
- 		auto array = v.at(U("batches")).as_array();
+ 		const auto& array = v["batches"].as_array();
  		if (mNumberOfClients != array.size())
  		{
  			throw std::runtime_error{"Number of clients not matching the batch size"};
  		}
 
- 		for(auto it = array.cbegin(); it != array.cend(); ++it)
+ 		for(const auto& it : array)
  		{
-            std::unique_ptr<Client> client = processBatches(array);
+            std::unique_ptr<Client> client = processBatches(it.as_array());
             clientList.push_back(std::move(client));
  		}
  	}
- 	catch(web::json::json_exception& exception)
+ 	catch(const web::json::json_exception& exception)
  	{
  		std::cout << "error parsing json: " << exception.what();
  	}

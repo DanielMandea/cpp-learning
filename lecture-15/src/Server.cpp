@@ -69,7 +69,7 @@ void Server::handlePostRequest(const web::http::http_request& request)
         std::string email{};
         web::json::value jvalue;
 
-        std::cout << request.to_string() << "\n\n";
+        std::cout<< "S: received request at "<< request.request_uri().path() << "method = POST \n ";
 
         if (pathList.size() == 1 && pathList.at(0) == "users")
         {
@@ -84,30 +84,26 @@ void Server::handlePostRequest(const web::http::http_request& request)
 
             //redirect to /users/123 (123 = ID assigned to the freshly created user).
             std::string newLocation = "/users/" + std::to_string(entity.computeStorageKey());
-            auto headers = request.headers();
+            web::http::http_response response{};
+            auto& headers = response.headers();
             headers["Location"] = newLocation;
-            request.reply(web::http::status_codes::Created);
+            response.set_status_code(web::http::status_codes::Created);
+            request.reply(response);
 
         }
         else if ((pathList.size() == 1 && pathList.at(0) != "users") || pathList.size() > 1)
         {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
     }
     catch (const std::exception& e)
     {
-        std::cout<<"EXEPTION\n\n"<<e.what()<<"\n\n";
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
-
-
-    // verify and process the path elements and any URI-Query data provided.
-    //
-    // valid example requests:
-    //
-    // the line below will probably no longer fulfill our replying needs as they got more complex.
-    //
-    // request.reply(handler() ? web::http::status_codes::OK : web::http::status_codes::BadRequest);
 }
 
 void Server::handleGetRequest(const web::http::http_request& request)
@@ -125,7 +121,9 @@ void Server::handleGetRequest(const web::http::http_request& request)
         auto pathList = web::http::uri::split_path(request.request_uri().path());
         web::json::value reply{};
 
-        if (pathList.size() == 1 && pathList.at(0) == "/users")
+        std::cout<< "S: received request at "<< request.request_uri().path() << "method = GET\n ";
+
+        if (pathList.size() == 1)
         {
             auto entities = mStorageEngine->read();
             int it = 0;
@@ -136,38 +134,48 @@ void Server::handleGetRequest(const web::http::http_request& request)
                 reply[user]["name"] = web::json::value::string(entity.getName());
                 reply[user]["email"] = web::json::value::string(entity.getEmail());
             }
-            if (!entities.empty())
-            {
-                request.reply(web::http::status_codes::OK, reply);
-            }
-            else
-            {
-                request.reply(web::http::status_codes::NotFound);
-            }
+            auto json_string = reply.serialize();
+            std::cout << "S: Sending reply for earlier request with body = " << json_string << "\n\n";
+            request.reply(web::http::status_codes::OK, reply);
         }
-        if (pathList.size() > 2)
+        else if (pathList.size() > 2)
         {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
-        if (pathList.size() == 2)
+        else if (pathList.size() == 2)
         {
             int key = stoi(pathList.at(1));
-            auto entity = mStorageEngine->read(key);
+            auto entity = mStorageEngine->read(key); //arunca exceptia
             reply["user"]["name"] = web::json::value::string(entity.getName());
             reply["user"]["email"] = web::json::value::string(entity.getEmail());
-            if (entity.getName().empty() || entity.getEmail().empty())
-            {
-                request.reply(web::http::status_codes::NotFound);
-            }
-            else
-            {
+            if (!entity.getName().empty()) {
+                auto json_string = reply.serialize();
+                std::cout << "S: Sending reply for earlier request with body = " << json_string << "\n\n";
                 request.reply(web::http::status_codes::OK, reply);
+            } else
+            {
+                web::json::value json_error{};
+                json_error["error_msg"] = web::json::value::parse("entity with id: " + std::to_string(key)
+                                                                  + " was not found");
+                std::cout << "S: Sending reply for earlier request with status code `Not Found`, body="
+                          << reply.serialize() << std::endl;
+                request.reply(web::http::status_codes::NotFound, json_error);
             }
         }
     }
+    catch (const web::http::http_exception& e)
+    {
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
+    }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }
 
@@ -186,14 +194,20 @@ void Server::handlePutRequest(const web::http::http_request& request) {
         std::string email{};
         web::json::value jvalue;
 
-        if (pathList.size() == 1 && pathList.at(0) == "/users") {
-            request.reply(web::http::status_codes::MethodNotAllowed);
+        std::cout<< "S: received request at "<< request.request_uri().path() << "method = PUT \n ";
+
+        if (pathList.size() == 1) {
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("update is not allowed with zero parameters");
+            request.reply(web::http::status_codes::MethodNotAllowed, json_error);
         }
         if (pathList.size() > 2) {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
-        if (pathList.size() == 2) {
-
+        else
+        {
             auto task = request.extract_json();
             task.wait();
             jvalue = task.get();
@@ -201,14 +215,22 @@ void Server::handlePutRequest(const web::http::http_request& request) {
             name = jvalue.as_object().at("name").as_string();
             email = jvalue.as_object().at("email").as_string();
             int key = stoi(pathList[1]);
+
             Entity entity {name, email};
             mStorageEngine->update(key, entity);
+
+            std::string newLocation = "/users/" + std::to_string(entity.computeStorageKey());
+            auto headers = request.headers();
+            headers["Location"] = newLocation;
+
             request.reply(web::http::status_codes::OK);
         }
     }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }
 
@@ -222,13 +244,13 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
     {
         auto pathList = web::http::uri::split_path(request.request_uri().path());
 
-        if (pathList.size() == 1 && pathList.at(0) == "/users")
-        {
-            request.reply(web::http::status_codes::MethodNotAllowed);
-        }
+        std::cout<< "S: received request at "<< request.request_uri().path() << "method = DELETE \n ";
+
         if (pathList.size() > 2)
         {
-            request.reply(web::http::status_codes::BadRequest);
+            web::json::value json_error{};
+            json_error["error_msg"] = web::json::value::parse("unexpected path structure");
+            request.reply(web::http::status_codes::BadRequest, json_error);
         }
         if (pathList.size() == 2)
         {
@@ -239,6 +261,8 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
     }
     catch (const std::exception& e)
     {
-        request.reply(web::http::status_codes::InternalError);
+        web::json::value json_error{};
+        json_error["error_msg"] = web::json::value::string(e.what());
+        request.reply(web::http::status_codes::InternalError, json_error);
     }
 }
