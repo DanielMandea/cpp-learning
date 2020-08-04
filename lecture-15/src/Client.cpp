@@ -125,11 +125,19 @@ namespace
 
     void printHttpResponse(const web::http::http_response& httpResponse)
     {
-        const auto userJsonObject = httpResponse.extract_json().get().at("user");
+        std::cout << "C: result with status OK of GET request is: ";
 
-        std::cout << "C: result with status OK of GET request is: "
-                  << "name = `" << userJsonObject.at("name").as_string() << "`, "
-                  << "email = " << userJsonObject.at("email").as_string() << "\n\n";
+        const auto jsonReply = httpResponse.extract_json().get();
+        const auto& userJsonObjectList = jsonReply.as_array();
+
+        for (const auto& itr : userJsonObjectList)
+        {
+            const auto& userJsonObject = itr.at("user");
+            std::cout << "name = `" << userJsonObject.at("name").as_string() << "`, "
+                      << "email = `" << userJsonObject.at("email").as_string() << "`, "
+                      << "key = `" << userJsonObject.at("key").as_string() << "`; ";
+        }
+        std::cout << "\n";
     }
 
     using HttpResponseHandler = std::function<void(const web::http::http_request&, const web::http::http_response&)>;
@@ -207,15 +215,13 @@ void Client::executeActions()
             }
 			catch (const UnexpectedStatusCodeException& e)
             {
-			    // TODO @Dragos@Andrada improve/fix this logging
-			    //
-                std::cout << "for action " << static_cast<int>(action->getOperation()) << ", received error from http server: " << e.what() << std::endl;
+                std::cout << "C: For action " << static_cast<int>(action->getOperation())
+                          << ", received unexpected status code: " << e.what() << "\n";
             }
 			catch (const std::exception& e)
             {
-                // TODO @Dragos@Andrada improve/fix this logging
-                //
-			    std::cout << "for action " << static_cast<int>(action->getOperation()) << ", std::exception message: " << e.what() << std::endl;
+			    std::cout << "C: For action " << static_cast<int>(action->getOperation())
+			              << ", received std::exception " << e.what() << "\n";
             }
 
             mActions.pop();
