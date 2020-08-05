@@ -22,7 +22,7 @@ namespace
 {
     constexpr const char* HOSTNAME{"http://localhost:8080"};
 
-    void performRequest(const web::http::http_request& httpRequest);
+    web::http::http_response performRequest(const web::http::http_request& httpRequest);
 
     void printHttpResponse(const web::http::http_response& httpResponse);
 
@@ -64,8 +64,7 @@ namespace
 	                                         const std::string& uri,
 	                                         const std::optional<web::json::value>& jsonBody)
 	{
-        web::http::http_request request{};
-        request.set_method(method);
+        web::http::http_request request{method};
         request.set_request_uri(uri);
 
         if (jsonBody)
@@ -84,7 +83,7 @@ namespace
             throw UnexpectedStatusCodeException{"Unexpected status code `200-OK` from a POST request"};
         }
 
-        if (web::http::methods::GET == httpRequest.method())
+        if (web::http::methods::POST == httpRequest.method())
         {
             printHttpResponse(httpResponse);
         }
@@ -152,15 +151,24 @@ namespace
         return httpResponseHandlerMap;
     }
 
-    void performRequest(const web::http::http_request& httpRequest)
+    web::http::http_response performRequest(const web::http::http_request& httpRequest)
+    {
+        return web::http::client::http_client{HOSTNAME}.request(httpRequest).get();
+    }
+
+    void handleHttpResponse(const web::http::http_request& httpRequest,
+                            const web::http::http_response& httpResponse,
+                            bool handleAutomatically)
     {
         const auto& responseHandlerMap = getHttpResponseHandlerMap();
-        const auto httpResponse = web::http::client::http_client{HOSTNAME}.request(httpRequest).get();
 
         const auto handlerFindItr = responseHandlerMap.find(httpResponse.status_code());
         if (responseHandlerMap.cend() != handlerFindItr)
         {
-            handlerFindItr->second(std::cref(httpRequest), std::cref(httpResponse));
+            if (handleAutomatically)
+            {
+                handlerFindItr->second(std::cref(httpRequest), std::cref(httpResponse));
+            }
         }
         else
         {
@@ -168,11 +176,28 @@ namespace
         }
     }
 
+    std::string findKeyInUserList(const web::json::array& userList, const std::string& userName)
+    {
+        const auto userNameFindItr = std::find_if(userList.begin(),
+                     userList.end(),
+                     [&userName](const auto& jsonObject)
+                     {
+                         return userName == jsonObject.at("user").as_object().at("name").as_string();
+                     });
+
+        if (userNameFindItr == userList.end())
+        {
+            throw std::runtime_error{"could not match username `" + userName + "` against user list"};
+        }
+
+        return userNameFindItr->at("user").as_object().at("key").as_string();
+    }
+
     void executeAction(const ClientAction& action)
     {
         std::optional<web::json::value> jsonBody{};
-        if (ClientAction::Operation::CREATE == action.getOperation() ||
-            ClientAction::Operation::UPDATE == action.getOperation())
+        const auto [method, uri] = getEndpointByClientAction(action);
+        if (ClientAction::Operation::CREATE == action.getOperation())
         {
             jsonBody.emplace(
                     web::json::value::object(
@@ -182,9 +207,25 @@ namespace
                                             {"email", web::json::value::string(action.getUserEmail())}
                                     }));
         }
+        else
+        {
+            auto request = buildRequestWith(web::http::methods::GET, "/users", std::nullopt));
+            const auto response = performRequest(request);
+            handleHttpResponse(request, response, false);
+            const auto key = findKeyInUserList(response.extract_json().get(), action.getUserName());
+            const std::string newUri{"/users/" + key};
+            if (ClientAction::Operation::UPDATE == action.getOperation())
+            {
+                jsonBody.emplace(
+                        web::json::value::object(
+                                std::vector<std::pair<std::string, web::json::value>>
+                                {
+                                    {"updated_name", web::json::value::string(action.getUpdatedUserName())}
+                                }));
+            }
 
-        const auto [method, uri] = getEndpointByClientAction(action);
-        performRequest(buildRequestWith(method, uri, jsonBody));
+            handleHttpResponse(performRequest(buildRequestWith(method, newUri, jsonBody)), true);
+        }
     }
 }
 
