@@ -42,10 +42,7 @@ namespace
 
 			case ClientAction::Operation::UPDATE:
 			{
-				return std::make_tuple(web::http::methods::PUT,
-				                       "/users/" + std::to_string(Entity{clientAction.getUserName(),
-                                                                         clientAction.getUserEmail()}.
-                                                                                                  computeStorageKey()));
+				return std::make_tuple(web::http::methods::PUT, "/users");
 			}
 
 			case ClientAction::Operation::DELETE:
@@ -83,7 +80,7 @@ namespace
             throw UnexpectedStatusCodeException{"Unexpected status code `200-OK` from a POST request"};
         }
 
-        if (web::http::methods::POST == httpRequest.method())
+        if (web::http::methods::GET == httpRequest.method())
         {
             printHttpResponse(httpResponse);
         }
@@ -124,7 +121,7 @@ namespace
 
     void printHttpResponse(const web::http::http_response& httpResponse)
     {
-        std::cout << "C: result with status OK of GET request is: ";
+        std::cout << "\nC: result with status OK of GET request is: ";
 
         const auto jsonReply = httpResponse.extract_json().get();
         const auto& userJsonObjectList = jsonReply.as_array();
@@ -136,7 +133,7 @@ namespace
                       << "email = `" << userJsonObject.at("email").as_string() << "`, "
                       << "key = `" << userJsonObject.at("key").as_string() << "`; ";
         }
-        std::cout << "\n";
+        std::cout << "\n\n";
     }
 
     using HttpResponseHandler = std::function<void(const web::http::http_request&, const web::http::http_response&)>;
@@ -208,20 +205,38 @@ namespace
                                             {"email", web::json::value::string(action.getUserEmail())}
                                     }));
         }
-        else {
+        else
+        {
             auto request = buildRequestWith(web::http::methods::GET, "/users", std::nullopt);
             const auto response = performRequest(request);
             handleHttpResponse(request, response, false);
             const auto key = findKeyInUserList(response.extract_json().get().as_array(), action.getUserName());
             newUri = "/users/" + key;
-            if (ClientAction::Operation::UPDATE == action.getOperation()) {
+            if (ClientAction::Operation::UPDATE == action.getOperation())
+            {
                 jsonBody.emplace(
                         web::json::value::object(
                                 std::vector<std::pair<std::string, web::json::value>>
                                         {
-                                                {"name", web::json::value::string(action.getUserName())},
-                                                {"updated_name", web::json::value::string(action.getUpdatedUserName())}
+                                                {"name", web::json::value::string(action.getUserName())}
                                         }));
+
+                auto lambda = [&jsonBody](const std::string& jsonKey, const std::function<std::string()>& function)
+                {
+                    try
+                    {
+                        (*jsonBody)[jsonKey] = web::json::value::string(function());
+                    }
+                    catch (...)
+                    {
+
+                    }
+                };
+
+                lambda("email", std::bind(&ClientAction::getUserEmail, std::cref(action)));
+                lambda("updated_name", std::bind(&ClientAction::getUpdatedUserName, std::cref(action)));
+                lambda("updated_email", std::bind(&ClientAction::getUpdatedEmail, std::cref(action)));
+
             }
         }
             handleHttpResponse(buildRequestWith(method, newUri, jsonBody),

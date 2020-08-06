@@ -1,3 +1,4 @@
+#include <atomic>
 #include <string>
 #include <utility>
 
@@ -23,5 +24,5 @@ private:
     std::string mName;
     std::string mEmail;
 
-    static int mStaticId;
+    static std::atomic<int> mStaticId;
 };

@@ -18,6 +18,8 @@ public:
 
 	void setUpdatedUserName(const std::string& updatedUserName);
 
+	void setUpdatedEmail(const std::string& updatedEmail);
+
 	Operation getOperation() const;
 
 	const std::string& getUserName() const;

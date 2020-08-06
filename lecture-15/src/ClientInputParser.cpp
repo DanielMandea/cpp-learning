@@ -6,6 +6,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <map>
 
 namespace
 {
@@ -63,9 +64,16 @@ namespace
 			}
 
 			if ("update" == operation)
-			{
-				auto updatedName = it2->at("updated_name").as_string();
-				action->setUpdatedUserName(updatedName);
+            {
+			    if (it2->has_field("updated_name"))
+                {
+                    action->setUpdatedUserName(it2->at("updated_name").as_string());
+                }
+
+                if (it2->has_field("updated_email"))
+                {
+                    action->setUpdatedEmail(it2->at("updated_email").as_string());
+                }
 			}
 
 			client->addAction(std::move(action));

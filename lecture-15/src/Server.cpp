@@ -72,7 +72,7 @@ void Server::handlePostRequest(const web::http::http_request& request)
             web::json::value jsonReply{};
             jsonReply["error_msg"] = web::json::value::parse("unexpected path structure");
 
-            std::cout << "S: Sending reply to earlier request with status code `BadRequest`, body="
+            std::cout << "S: Sending reply to earlier POST request with status code `BadRequest`, body="
                       << jsonReply.serialize() << std::endl;
 
             request.reply(web::http::status_codes::BadRequest, jsonReply);
@@ -91,7 +91,7 @@ void Server::handlePostRequest(const web::http::http_request& request)
             auto& headers = response.headers();
             headers["Location"] = newLocation;
 
-            std::cout << "S: Sending reply for earlier request with status code `Created`: name=" << name
+            std::cout << "S: Sending reply for earlier POST request with status code `Created`: name=" << name
                       << ", email=" << email << ", redirected to: " << newLocation << std::endl;
 
             response.set_status_code(web::http::status_codes::Created);
@@ -103,7 +103,7 @@ void Server::handlePostRequest(const web::http::http_request& request)
         web::json::value jsonReply{};
         jsonReply["error_msg"] = web::json::value::string(e.what());
 
-        std::cout << "S: Sending reply for earlier request with status code `InternalError` with body="
+        std::cout << "S: Sending reply for earlier POST request with status code `InternalError` with body="
                   << jsonReply.serialize() << std::endl;
 
         request.reply(web::http::status_codes::InternalError, jsonReply);
@@ -150,7 +150,7 @@ void Server::handleGetRequest(const web::http::http_request& request)
                             })
             });
 
-            std::cout << "S: Sending reply for earlier request with body=" << jsonReply.serialize() << std::endl;
+            std::cout << "S: Sending reply for earlier GET request with body=" << jsonReply.serialize() << std::endl;
             request.reply(web::http::status_codes::OK, jsonReply);
         }
         else if (pathList.size() == 1)
@@ -176,7 +176,7 @@ void Server::handleGetRequest(const web::http::http_request& request)
                            });
             auto jsonReply = web::json::value::array(jsonEntities);
 
-            std::cout << "S: Sending reply for earlier request, status code OK, body = " << jsonReply.serialize()
+            std::cout << "S: Sending reply for earlier GET request, status code OK, body = " << jsonReply.serialize()
                       << std::endl;
 
             request.reply(web::http::status_codes::OK, jsonReply);
@@ -187,7 +187,7 @@ void Server::handleGetRequest(const web::http::http_request& request)
         web::json::value jsonReply{};
         jsonReply["error_msg"] = web::json::value::string(e.what());
 
-        std::cout << "S: Sending reply to earlier request, with status code `InternalError`, HTTP error, body="
+        std::cout << "S: Sending reply to earlier GET request, with status code `InternalError`, HTTP error, body="
                   << jsonReply.serialize() << std::endl;
 
         request.reply(web::http::status_codes::InternalError, jsonReply);
@@ -197,7 +197,7 @@ void Server::handleGetRequest(const web::http::http_request& request)
         web::json::value jsonReply{};
         jsonReply["error_msg"] = web::json::value::string(e.what());
 
-        std::cout << "S: Sending reply to earlier request, with status code `InternalError`, Storage error, body="
+        std::cout << "S: Sending reply to earlier GET request, with status code `InternalError`, Storage error, body="
                   << jsonReply.serialize() << std::endl;
 
         request.reply(web::http::status_codes::InternalError, jsonReply);
@@ -215,10 +215,6 @@ void Server::handlePutRequest(const web::http::http_request& request)
     try
     {
         auto pathList = web::http::uri::split_path(request.request_uri().path());
-        std::string name{};
-        std::string email{};
-        std::string updatedName{};
-        web::json::value jsonValue{};
 
         std::cout << "S: Received request at `" << request.request_uri().path() << "`, method = PUT\n";
 
@@ -226,7 +222,7 @@ void Server::handlePutRequest(const web::http::http_request& request)
             web::json::value jsonReply{};
             jsonReply["error_msg"] = web::json::value::parse("update is not allowed with zero parameters");
 
-            std::cout << "S: Sending reply to earlier request, with status code `MethodNotAllowed`, body="
+            std::cout << "S: Sending reply to earlier PUT request, with status code `MethodNotAllowed`, body="
                       << jsonReply.serialize() << std::endl;
 
             request.reply(web::http::status_codes::MethodNotAllowed, jsonReply);
@@ -236,30 +232,24 @@ void Server::handlePutRequest(const web::http::http_request& request)
             web::json::value jsonReply{};
             jsonReply["error_msg"] = web::json::value::parse("unexpected path structure");
 
-            std::cout << "S: Sending reply to earlier request, with status code `BadRequest`, body="
+            std::cout << "S: Sending reply to earlier PUT request, with status code `BadRequest`, body="
                       << jsonReply.serialize() << std::endl;
 
             request.reply(web::http::status_codes::BadRequest, jsonReply);
         }
         else
         {
-            auto task = request.extract_json();
-            task.wait();
-            jsonValue = task.get();
-            name = jsonValue.as_object().at("name").as_string();
-            updatedName = jsonValue.as_object().at("updated_name").as_string();
+            auto requestBody = request.extract_json().get();
+            const auto& requestBodyObject = requestBody.as_object();
 
-            int key = stoi(pathList[1]);
+            Entity entity{requestBody.has_field("updated_name") ?
+                                                  requestBodyObject.at("updated_name").as_string() : std::string{},
+                          requestBody.has_field("updated_email") ?
+                                                requestBodyObject.at("updated_email").as_string() : std::string{}};
 
-            Entity entity{updatedName, email};
-            mStorageEngine->update(key, entity);
+            mStorageEngine->update(std::stoi(pathList[1]), entity);
 
-            std::string newLocation = "/users/" + std::to_string(entity.computeStorageKey());
-            auto headers = request.headers();
-            headers["Location"] = newLocation;
-
-            std::cout << "S: Sending reply for earlier request with status code `OK`: name=" << name
-                      << ", email=" << email << ", redirected to: " << newLocation << std::endl;
+            std::cout << "S: Sending reply for earlier PUT request with status code `OK` \n";
 
             request.reply(web::http::status_codes::OK);
         }
@@ -269,7 +259,7 @@ void Server::handlePutRequest(const web::http::http_request& request)
         web::json::value jsonReply{};
         jsonReply["error_msg"] = web::json::value::string(e.what());
 
-        std::cout << "S: Sending reply to earlier request, with status code `InternalError`, body="
+        std::cout << "S: Sending reply to earlier PUT request, with status code `InternalError`, body="
                   << jsonReply.serialize() << std::endl;
 
         request.reply(web::http::status_codes::InternalError, jsonReply);
@@ -291,7 +281,7 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
             web::json::value jsonReply{};
             jsonReply["error_msg"] = web::json::value::parse("unexpected path structure");
 
-            std::cout << "S: Sending reply to earlier request, with status code `BadRequest`, body="
+            std::cout << "S: Sending reply to earlier DEL request, with status code `BadRequest`, body="
                       << jsonReply.serialize() << std::endl;
 
             request.reply(web::http::status_codes::BadRequest, jsonReply);
@@ -300,7 +290,7 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
             int id = stoi(pathList[1]);
             mStorageEngine->delette(id);
 
-            std::cout << "S: Sending reply to earlier request, deleted the entity with id=" << id << std::endl;
+            std::cout << "S: Sending reply to earlier DEL request, deleted the entity with id=" << id << std::endl;
 
             request.reply(web::http::status_codes::OK);
         }
@@ -310,7 +300,7 @@ void Server::handleDeleteRequest(const web::http::http_request& request)
         web::json::value jsonReply{};
         jsonReply["error_msg"] = web::json::value::string(e.what());
 
-        std::cout << "S: Sending reply to earlier request, with status code `InternalError`, body="
+        std::cout << "S: Sending reply to earlier DEL request, with status code `InternalError`, body="
                   << jsonReply.serialize() << std::endl;
 
         request.reply(web::http::status_codes::InternalError, jsonReply);

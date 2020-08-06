@@ -2,13 +2,14 @@
 
 #include <utility>
 
+std::atomic<int> Entity::mStaticId{};
 
 Entity::Entity(std::string name, std::string email) :
-        mId{},
+        mId{++mStaticId},
         mName{std::move(name)},
         mEmail{std::move(email)}
 {
-    mId = computeStorageKey();
+
 }
 
 Entity::Entity(const Entity &entity) :
@@ -37,15 +38,5 @@ void Entity::setMEmail(const std::string &email) {
 
 int Entity::computeStorageKey() const
 {
-    int key = 0;
-    for (char c : mName)
-    {
-        key += (int)c;
-    }
-    for (char c : mEmail)
-    {
-        key += (int)c;
-    }
-
-    return key % 1000;
+    return mId;
 }

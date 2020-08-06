@@ -21,6 +21,11 @@ void ClientAction::setUpdatedUserName(const std::string& updatedUserName)
 	mUpdatedUserName = updatedUserName;
 }
 
+void ClientAction::setUpdatedEmail(const std::string &updatedEmail)
+{
+    mUpdatedEmail = updatedEmail;
+}
+
 ClientAction::Operation ClientAction::getOperation() const
 {
 	return mOperation;
