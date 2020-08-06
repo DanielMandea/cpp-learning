@@ -197,6 +197,7 @@ namespace
     {
         std::optional<web::json::value> jsonBody{};
         const auto [method, uri] = getEndpointByClientAction(action);
+        std::string newUri{uri};
         if (ClientAction::Operation::CREATE == action.getOperation())
         {
             jsonBody.emplace(
@@ -207,25 +208,25 @@ namespace
                                             {"email", web::json::value::string(action.getUserEmail())}
                                     }));
         }
-        else
-        {
-            auto request = buildRequestWith(web::http::methods::GET, "/users", std::nullopt));
+        else {
+            auto request = buildRequestWith(web::http::methods::GET, "/users", std::nullopt);
             const auto response = performRequest(request);
             handleHttpResponse(request, response, false);
-            const auto key = findKeyInUserList(response.extract_json().get(), action.getUserName());
-            const std::string newUri{"/users/" + key};
-            if (ClientAction::Operation::UPDATE == action.getOperation())
-            {
+            const auto key = findKeyInUserList(response.extract_json().get().as_array(), action.getUserName());
+            newUri = "/users/" + key;
+            if (ClientAction::Operation::UPDATE == action.getOperation()) {
                 jsonBody.emplace(
                         web::json::value::object(
                                 std::vector<std::pair<std::string, web::json::value>>
-                                {
-                                    {"updated_name", web::json::value::string(action.getUpdatedUserName())}
-                                }));
+                                        {
+                                                {"name", web::json::value::string(action.getUserName())},
+                                                {"updated_name", web::json::value::string(action.getUpdatedUserName())}
+                                        }));
             }
-
-            handleHttpResponse(performRequest(buildRequestWith(method, newUri, jsonBody)), true);
         }
+            handleHttpResponse(buildRequestWith(method, newUri, jsonBody),
+                               performRequest(buildRequestWith(method, newUri, jsonBody)),
+                               true);
     }
 }
 

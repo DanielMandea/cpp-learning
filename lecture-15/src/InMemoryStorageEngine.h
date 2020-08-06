@@ -72,11 +72,11 @@ std::vector<std::reference_wrapper<const EntityT>> InMemoryStorageEngine<EntityT
 template <typename EntityT>
 void InMemoryStorageEngine<EntityT>::update(const StorageKey& key, const EntityT& entity)
 {
-    if (mEntityMap.find(key) != mEntityMap.end())
-    {
-        delette(key);
-        create(entity);
-    }
+     if (mEntityMap.find(key) != mEntityMap.end())
+     {
+         delette(key);
+         create(entity);
+     }
     else
     {
         throw std::runtime_error{"Key" + std::to_string(key) + " not found in the map"};

@@ -26,11 +26,14 @@ public:
 
 	const std::string& getUpdatedUserName() const;
 
+	const std::string& getUpdatedEmail() const;
+
 private:
 	Operation mOperation;
 	std::string mUserName;
 	std::optional<std::string> mUserEmail;
 	std::optional<std::string> mUpdatedUserName;
+	std::optional<std::string> mUpdatedEmail;
 
 	Operation getOperationType(const std::string& operation) const;
 };

@@ -217,6 +217,7 @@ void Server::handlePutRequest(const web::http::http_request& request)
         auto pathList = web::http::uri::split_path(request.request_uri().path());
         std::string name{};
         std::string email{};
+        std::string updatedName{};
         web::json::value jsonValue{};
 
         std::cout << "S: Received request at `" << request.request_uri().path() << "`, method = PUT\n";
@@ -246,11 +247,11 @@ void Server::handlePutRequest(const web::http::http_request& request)
             task.wait();
             jsonValue = task.get();
             name = jsonValue.as_object().at("name").as_string();
-            email = jsonValue.as_object().at("email").as_string();
+            updatedName = jsonValue.as_object().at("updated_name").as_string();
 
             int key = stoi(pathList[1]);
 
-            Entity entity{name, email};
+            Entity entity{updatedName, email};
             mStorageEngine->update(key, entity);
 
             std::string newLocation = "/users/" + std::to_string(entity.computeStorageKey());

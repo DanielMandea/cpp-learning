@@ -41,6 +41,11 @@ const std::string& ClientAction::getUpdatedUserName() const
 	return *mUpdatedUserName;
 }
 
+const std::string& ClientAction::getUpdatedEmail() const
+{
+    return *mUpdatedEmail;
+}
+
 ClientAction::Operation ClientAction::getOperationType(const std::string& operation) const
 {
 	if ("create" == operation)
